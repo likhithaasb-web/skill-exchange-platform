@@ -1,0 +1,11 @@
+{
+  "name": "skillx-root",
+  "version": "1.0.0",
+  "description": "SkillX — Premium Peer-to-Peer Skill Exchange Platform",
+  "scripts": {
+    "server": "node server/src/server.js",
+    "seed": "node server/src/seed.js",
+    "client": "npm run dev --prefix client",
+    "build": "npm run build --prefix client"
+  }
+}

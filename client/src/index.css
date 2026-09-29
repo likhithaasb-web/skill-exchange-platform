@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --accent-color: #D4AF37;
+    --accent-hover: #E5C05B;
+    --accent-glow: rgba(212, 175, 55, 0.25);
+  }
+
+  [data-accent="blue"] {
+    --accent-color: #3B82F6;
+    --accent-hover: #60A5FA;
+    --accent-glow: rgba(59, 130, 246, 0.25);
+  }
+
+  [data-accent="green"] {
+    --accent-color: #10B981;
+    --accent-hover: #34D399;
+    --accent-glow: rgba(16, 185, 129, 0.25);
+  }
+
+  [data-accent="purple"] {
+    --accent-color: #8B5CF6;
+    --accent-hover: #A78BFA;
+    --accent-glow: rgba(139, 92, 246, 0.25);
+  }
+
+  /* Light mode root styling */
+  html:not(.dark) {
+    background-color: #F8F9FA;
+    color: #0F172A;
+  }
+
+  html.dark {
+    background-color: #07090E;
+    color: #F8FAFC;
+  }
+}
+
+/* Elegant ambient mesh and dot grid */
+.ambient-canvas {
+  position: relative;
+  min-height: 100vh;
+}
+
+.ambient-canvas::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+html.dark .ambient-canvas::before {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}
+
+/* Subtle glowing decorative orb accents */
+.ambient-glow-orbs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ambient-glow-orbs .orb-1 {
+  position: absolute;
+  top: -10%;
+  left: 20%;
+  width: 600px;
+  height: 600px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0) 70%);
+  filter: blur(60px);
+}
+
+.ambient-glow-orbs .orb-2 {
+  position: absolute;
+  top: 40%;
+  right: -5%;
+  width: 500px;
+  height: 500px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, rgba(99, 102, 241, 0) 70%);
+  filter: blur(60px);
+}
+
+html:not(.dark) .ambient-glow-orbs .orb-1 {
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0) 70%);
+}
+
+html:not(.dark) .ambient-glow-orbs .orb-2 {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 70%);
+}
+
+/* Reduced motion preference */
+[data-motion="reduced"] * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+/* Metallic Gold Sheen Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(212, 175, 55, 0) 0%,
+    rgba(212, 175, 55, 0.15) 50%,
+    rgba(212, 175, 55, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite linear;
+}
+
+/* Density utility wrappers */
+[data-density="compact"] .density-pad {
+  padding: 0.5rem 0.75rem;
+}
+[data-density="comfortable"] .density-pad {
+  padding: 1rem 1.25rem;
+}
+[data-density="spacious"] .density-pad {
+  padding: 1.5rem 2rem;
+}
