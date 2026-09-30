@@ -13,10 +13,50 @@ function getAuthHeaders(): HeadersInit {
 }
 
 async function handleResponse(res: Response) {
-  const data = await res.json().catch(() => ({ success: false, message: 'Server response parsing failed' }));
-  if (!res.ok) {
-    throw new Error(data.message || 'Request failed');
+  const contentType = res.headers.get('content-type') || '';
+  let data: any = null;
+
+  if (contentType.includes('application/json')) {
+    try {
+      data = await res.json();
+    } catch (e) {
+      data = null;
+    }
   }
+
+  if (!data) {
+    const rawText = await res.text().catch(() => '');
+
+    // 1. Render cold start or downtime
+    if (res.status === 502 || res.status === 503) {
+      throw new Error('Backend server is waking up on Render (502/503). Please wait 30–60 seconds for the free instance to spin up, then try again.');
+    }
+
+    // 2. 404 Route Not Found
+    if (res.status === 404) {
+      throw new Error('API endpoint not found (404). Check if the backend is running and VITE_API_URL is configured properly.');
+    }
+
+    // 3. HTML returned instead of JSON (common when Static Site rewrites to index.html)
+    if (rawText.trim().startsWith('<!DOCTYPE') || rawText.trim().startsWith('<html')) {
+      throw new Error('Backend API not reached (received HTML instead of JSON). If using a separate Static Site on Render, ensure VITE_API_URL is set in your frontend Environment Variables.');
+    }
+
+    if (!res.ok) {
+      throw new Error(`Server error (${res.status}): ${rawText.slice(0, 100) || 'Unknown error'}`);
+    }
+
+    data = { success: false, message: rawText || 'Unexpected server response' };
+  }
+
+  if (!res.ok) {
+    throw new Error(data.message || `Request failed with status ${res.status}`);
+  }
+
+  if (data.success === false && data.message) {
+    throw new Error(data.message);
+  }
+
   return data;
 }
 
