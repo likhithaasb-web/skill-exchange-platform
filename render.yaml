@@ -1,0 +1,24 @@
+# Render Blueprint for SkillX
+# To deploy using this blueprint, go to Render Dashboard -> Blueprints -> New Blueprint Instance
+# and connect this repository.
+
+services:
+  # Option 1: Unified Fullstack Web Service (Recommended for Render Free Tier)
+  # Serves both the Express API/WebSockets and the React production build from a single service.
+  - type: web
+    name: skillx-platform
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false # Set this in Render Dashboard to your MongoDB Atlas connection string
+      - key: JWT_SECRET
+        generateValue: true # Render will generate a cryptographically secure random string
+      - key: CLIENT_URL
+        value: http://localhost:5173

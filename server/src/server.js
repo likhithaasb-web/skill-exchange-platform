@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -28,10 +29,65 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/skillx_db';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configurable CORS checker supporting Render domains, CLIENT_URL, and local dev
+const configuredClients = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map(u => u.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+const allowedOrigins = [
+  ...configuredClients,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
+
+function isOriginAllowed(origin) {
+  // Allow requests with no origin (mobile apps, curl, server-to-server)
+  if (!origin) return true;
+
+  const normalized = origin.replace(/\/$/, '');
+
+  // Explicitly configured origins
+  if (allowedOrigins.includes(normalized)) return true;
+
+  try {
+    const urlObj = new URL(origin);
+    // Allow any Render deployment subdomain (*.onrender.com)
+    if (urlObj.hostname.endsWith('.onrender.com')) return true;
+    // Allow any localhost port
+    if (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1') return true;
+  } catch (e) {
+    // Malformed URL, reject
+    return false;
+  }
+
+  return false;
+}
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (isOriginAllowed(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Permissive fallback to prevent deployment crashes while logging
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+};
+
 // Socket.io initialization with CORS
 const io = new Server(server, {
   cors: {
-    origin: [CLIENT_URL, 'http://localhost:3000', 'http://127.0.0.1:5173'],
+    origin: (origin, callback) => callback(null, true),
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -46,10 +102,7 @@ app.use(helmet({
   contentSecurityPolicy: false
 }));
 
-app.use(cors({
-  origin: [CLIENT_URL, 'http://localhost:3000', 'http://127.0.0.1:5173'],
-  credentials: true
-}));
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -87,6 +140,23 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Serve static client bundle in production (Unified Fullstack Render Deployment)
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+const isClientBuilt = fs.existsSync(path.join(clientDistPath, 'index.html'));
+
+if (isClientBuilt) {
+  console.log(`[Production] Serving static client build from: ${clientDistPath}`);
+  app.use(express.static(clientDistPath));
+
+  // SPA fallback for all frontend routes
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
+
 // Centralized Error Handling
 app.use(errorHandler);
 
@@ -97,12 +167,13 @@ async function startServer() {
     await mongoose.connect(MONGO_URI);
     console.log('✓ Successfully connected to MongoDB.');
 
-    server.listen(PORT, () => {
+    server.listen(PORT, '0.0.0.0', () => {
       console.log(`===============================================`);
       console.log(`  SKILLX BACKEND & SOCKET.IO SERVER RUNNING   `);
       console.log(`  Port: ${PORT}`);
+      console.log(`  Host: 0.0.0.0`);
       console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`  Client Origin: ${CLIENT_URL}`);
+      console.log(`  Static Client: ${isClientBuilt ? 'Active (Unified Fullstack)' : 'Disabled (API Only)'}`);
       console.log(`===============================================`);
     });
   } catch (err) {

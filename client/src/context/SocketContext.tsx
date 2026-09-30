@@ -21,8 +21,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { user } = useAuth();
 
   useEffect(() => {
-    // Connect to server origin or proxy
-    const socketInstance = io(window.location.origin, {
+    // Connect to server origin or configured backend URL
+    const socketUrl = (import.meta.env.VITE_SOCKET_URL as string) ||
+                      (import.meta.env.VITE_API_URL as string) ||
+                      window.location.origin;
+
+    const socketInstance = io(socketUrl, {
       autoConnect: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
