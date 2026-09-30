@@ -29,8 +29,11 @@ const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/skillx_db';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads');
+// Ensure uploads directory exists (use /tmp/skillx-uploads on Vercel)
+const uploadsDir = process.env.VERCEL
+  ? '/tmp/skillx-uploads'
+  : path.join(__dirname, '../uploads');
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -128,7 +131,7 @@ app.use('/api/safety', safetyRoutes);
 app.use('/api/messages', messageRoutes);
 
 // Static uploads directory (for protected resource downloads, routes are used; thumbnails/previews can be served if needed)
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(uploadsDir));
 
 // Root Health Check
 app.get('/api/health', (req, res) => {
