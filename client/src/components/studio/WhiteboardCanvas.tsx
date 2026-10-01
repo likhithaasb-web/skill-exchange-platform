@@ -397,6 +397,14 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
     link.click();
   };
 
+  const getCanvasCursorClass = () => {
+    if (!canEdit) return 'cursor-not-allowed';
+    if (tool === 'eraser') return 'cursor-board-eraser';
+    if (tool === 'text') return 'cursor-text';
+    // For pen, pencil, highlighter, and writing/drawing tools:
+    return 'cursor-board-pen';
+  };
+
   return (
     <div className="flex flex-col h-full bg-obsidian-950 rounded-xl overflow-hidden border border-white/10 relative">
       {/* Top Floating Toolbar */}
@@ -495,7 +503,7 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
       </div>
 
       {/* Main Canvas Area */}
-      <div className="flex-1 w-full h-full relative cursor-crosshair overflow-hidden">
+      <div className={`flex-1 w-full h-full relative overflow-hidden ${getCanvasCursorClass()}`}>
         <canvas
           ref={canvasRef}
           width={1600}
@@ -504,7 +512,7 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className="w-full h-full block"
+          className={`w-full h-full block ${getCanvasCursorClass()}`}
         />
 
         {/* Live Peer Cursors */}
