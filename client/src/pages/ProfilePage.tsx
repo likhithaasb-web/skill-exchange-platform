@@ -88,10 +88,11 @@ export const ProfilePage: React.FC = () => {
 
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-w-0">
         {currentUser && <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
 
-        <main className={`flex-1 ${currentUser ? 'lg:pl-64' : ''} p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto w-full space-y-8 relative z-10`}>
+        <div className={`flex-1 ${currentUser ? 'lg:pl-64' : ''} flex flex-col min-w-0 w-full`}>
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto w-full space-y-8 relative z-10">
           {isLoading ? (
             <div className="py-24 text-center text-slate-500 dark:text-slate-400 text-xs">
               Loading member passport...
@@ -272,6 +273,7 @@ export const ProfilePage: React.FC = () => {
             </>
           )}
         </main>
+        </div>
       </div>
 
       {profileUser && (

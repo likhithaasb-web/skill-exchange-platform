@@ -259,10 +259,11 @@ export const SettingsPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-obsidian-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 ambient-canvas">
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-      <div className="flex-1 flex relative z-10">
+      <div className="flex-1 flex min-w-0 relative z-10">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-        <main className="flex-1 lg:pl-64 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto w-full space-y-6">
+        <div className="flex-1 lg:pl-64 flex flex-col min-w-0 w-full">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto w-full space-y-6">
           
           {/* Page Header */}
           <div className="pb-4 border-b border-slate-200 dark:border-obsidian-800">
@@ -916,6 +917,7 @@ export const SettingsPage: React.FC = () => {
           )}
 
         </main>
+        </div>
       </div>
 
       <AvatarPickerModal

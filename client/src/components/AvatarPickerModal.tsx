@@ -35,15 +35,15 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
     : AVATAR_CATALOG.filter(a => a.category === activeCategory);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-obsidian-900 border border-gold-500/20 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative text-slate-100 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-obsidian-900 border border-gold-500/20 rounded-2xl w-full max-w-xl p-4 sm:p-6 shadow-2xl relative text-slate-100 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center justify-between pb-3.5 border-b border-white/10">
           <div>
-            <h3 className="text-xl font-bold font-display text-white flex items-center gap-2">
+            <h3 className="text-base sm:text-xl font-bold font-display text-white flex items-center gap-2">
               Choose Your Skill Identity Avatar
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
               Select an avatar that represents you. Real photos are never required.
             </p>
           </div>

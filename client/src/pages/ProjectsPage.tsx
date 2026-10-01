@@ -104,10 +104,11 @@ export const ProjectsPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-obsidian-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans ambient-canvas transition-colors duration-200">
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-w-0">
         {user && <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
 
-        <main className={`flex-1 ${user ? 'lg:pl-64' : ''} p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto w-full space-y-6`}>
+        <div className={`flex-1 ${user ? 'lg:pl-64' : ''} flex flex-col min-w-0 w-full`}>
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto w-full space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10 gap-4">
             <div>
@@ -266,6 +267,7 @@ export const ProjectsPage: React.FC = () => {
             </div>
           )}
         </main>
+        </div>
       </div>
 
       {/* Create Project Modal */}

@@ -20,11 +20,14 @@ import { useSocket } from '../context/SocketContext';
 import { api } from '../services/api';
 import { Conversation, DirectMessage, User } from '../types';
 import { UserAvatar } from '../components/UserAvatar';
+import { Navbar } from '../components/Navbar';
+import { Sidebar } from '../components/Sidebar';
 
 export const MessagesPage: React.FC = () => {
   const { user } = useAuth();
   const { socket, onlineUserIds } = useSocket();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedPeer, setSelectedPeer] = useState<User | null>(null);
@@ -261,31 +264,38 @@ export const MessagesPage: React.FC = () => {
   const isPeerOnline = (peerId: string) => onlineUserIds.includes(peerId);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      
-      {/* Page Header */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-gold-500/10 text-gold-600 dark:text-gold-400 border border-gold-500/20">
-              Zero AI • Human Peer Network
-            </span>
-            <span className="flex items-center gap-1 text-[11px] text-emerald-500 font-medium">
-              <Circle className="w-2 h-2 fill-emerald-500 text-emerald-500 animate-pulse" />
-              Live Presence Active
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-bold text-slate-900 dark:text-slate-100">
-            Direct Messages
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Real-time, private peer communication for exchange planning and questions.
-          </p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-obsidian-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans ambient-canvas transition-colors duration-200">
+      <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-      {/* Main Messaging Container */}
-      <div className="bg-white/80 dark:bg-obsidian-900/80 border border-slate-200 dark:border-obsidian-800 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[620px] max-h-[750px]">
+      <div className="flex-1 flex min-w-0">
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+        <div className="flex-1 lg:pl-64 flex flex-col min-w-0 w-full">
+          <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full flex flex-col space-y-4">
+            
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wider uppercase bg-gold-500/10 text-gold-600 dark:text-gold-400 border border-gold-500/20">
+                    Zero AI • Human Peer Network
+                  </span>
+                  <span className="flex items-center gap-1 text-[11px] text-emerald-500 font-medium">
+                    <Circle className="w-2 h-2 fill-emerald-500 text-emerald-500 animate-pulse" />
+                    Live Presence Active
+                  </span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-heading font-bold text-slate-900 dark:text-slate-100">
+                  Direct Messages
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                  Real-time, private peer communication for exchange planning and questions.
+                </p>
+              </div>
+            </div>
+
+            {/* Main Messaging Container */}
+            <div className="bg-white/80 dark:bg-obsidian-900/80 border border-slate-200 dark:border-obsidian-800 rounded-2xl shadow-xl backdrop-blur-md overflow-hidden grid grid-cols-1 md:grid-cols-12 flex-1 min-h-[550px] h-[calc(100vh-14rem)] sm:h-[calc(100vh-12rem)]">
         
         {/* LEFT COLUMN: CONVERSATION LIST (4 cols) */}
         <div className={`md:col-span-4 border-r border-slate-200 dark:border-obsidian-800 flex flex-col ${
@@ -440,7 +450,7 @@ export const MessagesPage: React.FC = () => {
 
                 <div className="flex items-center gap-2">
                   <Link
-                    to={`/u/${selectedPeer.username}`}
+                    to={`/profile/${selectedPeer.username}`}
                     className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-obsidian-700 bg-white dark:bg-obsidian-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-gold-500/50 hover:text-gold-500 transition flex items-center gap-1.5"
                   >
                     <UserIcon className="w-3.5 h-3.5" />
@@ -562,6 +572,9 @@ export const MessagesPage: React.FC = () => {
           )}
         </div>
 
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );

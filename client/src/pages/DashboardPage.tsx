@@ -71,11 +71,12 @@ export const DashboardPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-obsidian-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans ambient-canvas transition-colors duration-200">
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-w-0">
         <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
         {/* Main Dashboard Workspace */}
-        <main className="flex-1 lg:pl-64 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8">
+        <div className="flex-1 lg:pl-64 flex flex-col min-w-0 w-full">
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8">
           {/* Top Headline Section */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -343,6 +344,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
         </main>
+        </div>
       </div>
 
       <SkillEditorModal
