@@ -6,18 +6,14 @@ const User = require('../models/User');
 
 exports.submitReview = async (req, res, next) => {
   try {
-    const { exchangeId, recipientId, skillTaught, appreciationChips, personalNote, visibility } = req.body;
+    let { exchangeId, recipientId, skillTaught, appreciationChips, personalNote, visibility } = req.body;
     const reviewerId = req.user._id;
 
-    if (!exchangeId || !recipientId || !skillTaught) {
+    if (!exchangeId || !skillTaught) {
       return res.status(400).json({
         success: false,
-        message: 'Exchange ID, recipient, and skill taught are required.'
+        message: 'Exchange ID and skill taught are required.'
       });
-    }
-
-    if (recipientId.toString() === reviewerId.toString()) {
-      return res.status(400).json({ success: false, message: 'You cannot review yourself.' });
     }
 
     const exchange = await SkillExchange.findById(exchangeId);
@@ -26,10 +22,20 @@ exports.submitReview = async (req, res, next) => {
     }
 
     // Verify reviewer was part of this exchange
-    const isParticipant = exchange.requesterId.toString() === reviewerId.toString() ||
-                          exchange.recipientId.toString() === reviewerId.toString();
-    if (!isParticipant) {
+    const isRequester = exchange.requesterId.toString() === reviewerId.toString();
+    const isRecipient = exchange.recipientId.toString() === reviewerId.toString();
+    if (!isRequester && !isRecipient) {
       return res.status(403).json({ success: false, message: 'Only participants of this exchange can leave a review.' });
+    }
+
+    // Automatically resolve recipient to the actual partner of this exchange
+    const partnerId = isRequester ? exchange.recipientId : exchange.requesterId;
+    if (!recipientId || recipientId.toString() === reviewerId.toString()) {
+      recipientId = partnerId;
+    }
+
+    if (recipientId.toString() === reviewerId.toString()) {
+      return res.status(400).json({ success: false, message: 'You cannot review yourself.' });
     }
 
     // Check if already reviewed for this exchange

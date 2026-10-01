@@ -37,14 +37,22 @@ export const PeerReviewModal: React.FC<PeerReviewModalProps> = ({
 
   if (!isOpen || !exchange) return null;
 
-  // Recipient of review is the other participant
-  const isRequester = exchange.requesterId._id === user?._id;
+  // Resolve current user ID and exchange participant IDs safely
+  const currentUserId = (user?._id || (user as any)?.id || '').toString();
+  const requesterId = (exchange.requesterId?._id || exchange.requesterId || '').toString();
+  const recipientId = (exchange.recipientId?._id || exchange.recipientId || '').toString();
+
+  const isRequester = currentUserId === requesterId;
   const partner = isRequester ? exchange.recipientId : exchange.requesterId;
-  const skillTaughtByPartner = isRequester ? exchange.requestedSkill.name : exchange.offeredSkill.name;
+  const partnerId = isRequester ? recipientId : requesterId;
+  const partnerDisplayName =
+    partner?.displayName || (partner?.username ? `@${partner.username}` : 'Exchange Partner');
+  const skillTaughtByPartner =
+    (isRequester ? exchange.requestedSkill?.name : exchange.offeredSkill?.name) || 'Skill';
 
   const toggleChip = (chipId: string) => {
     if (selectedChips.includes(chipId)) {
-      setSelectedChips(selectedChips.filter(c => c !== chipId));
+      setSelectedChips(selectedChips.filter((c) => c !== chipId));
     } else {
       setSelectedChips([...selectedChips, chipId]);
     }
@@ -57,13 +65,19 @@ export const PeerReviewModal: React.FC<PeerReviewModalProps> = ({
       return;
     }
 
+    const targetRecipientId = (partner?._id || partnerId || '').toString();
+    if (targetRecipientId === currentUserId) {
+      setError('You cannot review yourself. Please verify your exchange partner.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
       await api.submitReview({
         exchangeId: exchange._id,
-        recipientId: partner._id,
+        recipientId: targetRecipientId,
         skillTaught: skillTaughtByPartner,
         appreciationChips: selectedChips,
         personalNote,
@@ -87,7 +101,7 @@ export const PeerReviewModal: React.FC<PeerReviewModalProps> = ({
           <div>
             <h3 className="text-xl font-bold font-display text-white flex items-center gap-2">
               <Star className="w-5 h-5 text-gold-400 fill-gold-400" />
-              How was your exchange with {partner.displayName}?
+              How was your exchange with {partnerDisplayName}?
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
               Verified skill taught: <span className="text-gold-400 font-semibold">{skillTaughtByPartner}</span>

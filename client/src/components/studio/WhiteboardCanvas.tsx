@@ -155,12 +155,29 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
       }
 
       if (el.points && el.points.length > 0) {
-        ctx.beginPath();
-        ctx.moveTo(el.points[0].x * scale, el.points[0].y * scale);
-        for (let i = 1; i < el.points.length; i++) {
-          ctx.lineTo(el.points[i].x * scale, el.points[i].y * scale);
+        if (el.points.length === 1) {
+          ctx.beginPath();
+          const dotRadius = Math.max(2, (ctx.lineWidth / 2));
+          ctx.arc(el.points[0].x * scale, el.points[0].y * scale, dotRadius, 0, Math.PI * 2);
+          ctx.fillStyle = ctx.strokeStyle;
+          ctx.fill();
+        } else if (el.points.length === 2) {
+          ctx.beginPath();
+          ctx.moveTo(el.points[0].x * scale, el.points[0].y * scale);
+          ctx.lineTo(el.points[1].x * scale, el.points[1].y * scale);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(el.points[0].x * scale, el.points[0].y * scale);
+          for (let i = 1; i < el.points.length - 1; i++) {
+            const midX = ((el.points[i].x + el.points[i + 1].x) / 2) * scale;
+            const midY = ((el.points[i].y + el.points[i + 1].y) / 2) * scale;
+            ctx.quadraticCurveTo(el.points[i].x * scale, el.points[i].y * scale, midX, midY);
+          }
+          const last = el.points[el.points.length - 1];
+          ctx.lineTo(last.x * scale, last.y * scale);
+          ctx.stroke();
         }
-        ctx.stroke();
       }
     } else if (el.type === 'line' || el.type === 'arrow') {
       if (el.points && el.points.length >= 2) {
@@ -241,14 +258,43 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
     ctx.restore();
   };
 
-  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
+    const clientX = 'touches' in e && e.touches[0] ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+    const clientY = 'touches' in e && e.touches[0] ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
     return {
-      x: (e.clientX - rect.left) / scale,
-      y: (e.clientY - rect.top) / scale,
+      x: (clientX - rect.left) / scale,
+      y: (clientY - rect.top) / scale,
     };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!canEdit) return;
+    const { x, y } = getCanvasCoords(e);
+    setIsDrawing(true);
+    if (tool === 'pen' || tool === 'pencil' || tool === 'highlighter' || tool === 'eraser') {
+      setCurrentElement({
+        id: 'wb-' + Date.now(),
+        type: tool,
+        points: [{ x, y }],
+        color,
+        strokeWidth: tool === 'pencil' ? 1.5 : tool === 'highlighter' ? 16 : strokeWidth,
+      });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !currentElement) return;
+    const { x, y } = getCanvasCoords(e);
+    socket?.emit('cursor-move', { studioId, cursor: { x, y } });
+    if (currentElement.type === 'pen' || currentElement.type === 'pencil' || currentElement.type === 'highlighter' || currentElement.type === 'eraser') {
+      setCurrentElement({
+        ...currentElement,
+        points: [...(currentElement.points || []), { x, y }],
+      });
+    }
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -379,12 +425,23 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
   };
 
   const handleClear = () => {
-    if (window.confirm('Clear the entire collaborative whiteboard?')) {
-      setHistory((prev) => [...prev, elements]);
-      setElements([]);
-      socket?.emit('whiteboard-clear', { studioId });
-      if (onSave) onSave([]);
+    if (!canEdit || elements.length === 0) return;
+    setHistory((prev) => [...prev, elements]);
+    setRedoStack([]);
+    setElements([]);
+
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#0B0F17';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawGrid(ctx, canvas.width, canvas.height);
+      }
     }
+
+    socket?.emit('whiteboard-clear', { studioId });
+    if (onSave) onSave([]);
   };
 
   const handleExportPNG = () => {
@@ -401,8 +458,8 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
     if (!canEdit) return 'cursor-not-allowed';
     if (tool === 'eraser') return 'cursor-board-eraser';
     if (tool === 'text') return 'cursor-text';
-    // For pen, pencil, highlighter, and writing/drawing tools:
-    return 'cursor-board-pen';
+    // 5px dot mark pointer to write like a paint tool or digital board:
+    return 'cursor-board-dot';
   };
 
   return (
@@ -465,20 +522,24 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
           <select
             value={strokeWidth}
             onChange={(e) => setStrokeWidth(Number(e.target.value))}
+            disabled={!canEdit}
             className="bg-obsidian-950 border border-white/10 rounded-lg text-xs px-2 py-1 text-slate-300 focus:outline-none"
+            title="Pen Stroke Size"
           >
-            <option value={1}>1px</option>
+            <option value={1}>1px Fine</option>
             <option value={2}>2px</option>
-            <option value={3}>3px</option>
-            <option value={6}>6px</option>
+            <option value={3}>3px Pen</option>
+            <option value={5}>5px Dot Mark</option>
+            <option value={8}>8px Marker</option>
+            <option value={14}>14px Board</option>
           </select>
 
           {/* Undo / Clear / Export */}
-          <div className="flex items-center gap-1 border-l border-white/10 pl-2">
+          <div className="flex items-center gap-1.5 border-l border-white/10 pl-2">
             <button
               onClick={handleUndo}
               disabled={elements.length === 0 || !canEdit}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 transition-colors"
               title="Undo Stroke"
             >
               <RotateCcw className="w-4 h-4" />
@@ -486,14 +547,15 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
             <button
               onClick={handleClear}
               disabled={elements.length === 0 || !canEdit}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 disabled:opacity-30"
-              title="Clear Whiteboard"
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/30 flex items-center gap-1.5 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              title="All Clear: Wipe canvas completely (Undo available)"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>All Clear</span>
             </button>
             <button
               onClick={handleExportPNG}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-gold-400 hover:bg-gold-500/10"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-gold-400 hover:bg-gold-500/10 transition-colors"
               title="Export as PNG"
             >
               <Download className="w-4 h-4" />
@@ -512,7 +574,10 @@ export const WhiteboardCanvas: React.FC<WhiteboardCanvasProps> = ({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className={`w-full h-full block ${getCanvasCursorClass()}`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleMouseUp}
+          className={`w-full h-full block touch-none ${getCanvasCursorClass()}`}
         />
 
         {/* Live Peer Cursors */}
