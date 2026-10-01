@@ -18,7 +18,9 @@ import {
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { AccentColor, InterfaceDensity, MotionPreference, ThemeMode } from '../types';
+import { AccentColor, InterfaceDensity, MotionPreference, ThemeMode, AvatarData } from '../types';
+import { UserAvatar } from './UserAvatar';
+import { AvatarPickerModal } from './AvatarPickerModal';
 
 interface RightSettingsDrawerProps {
   isOpen: boolean;
@@ -33,6 +35,7 @@ export const RightSettingsDrawer: React.FC<RightSettingsDrawerProps> = ({ isOpen
   const [activeTab, setActiveTab] = useState<'privacy' | 'appearance' | 'security'>('privacy');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
   // Local state for privacy settings
   const [profileVis, setProfileVis] = useState<'public' | 'members' | 'private'>(
@@ -135,6 +138,23 @@ export const RightSettingsDrawer: React.FC<RightSettingsDrawerProps> = ({ isOpen
       } catch (err) {
         console.warn('Could not sync appearance to server:', err);
       }
+    }
+  };
+
+  const handleAvatarSelect = async (newAvatar: AvatarData) => {
+    try {
+      setIsSaving(true);
+      const res = await api.updateProfile({ avatar: newAvatar });
+      if (res.user) {
+        updateUser(res.user);
+      }
+      setSaveMessage('Persona avatar updated successfully!');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err: any) {
+      setSaveMessage(err.response?.data?.message || 'Failed to update avatar');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -423,39 +443,34 @@ export const RightSettingsDrawer: React.FC<RightSettingsDrawerProps> = ({ isOpen
                   </div>
                 </div>
 
-                {/* Accent Color */}
+                {/* Persona Avatar */}
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    Accent Color
+                    Persona Avatar
                   </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { id: 'gold', label: 'SkillX Gold', colorClass: 'bg-[#D4AF37]' },
-                      { id: 'blue', label: 'Electric Blue', colorClass: 'bg-[#3B82F6]' },
-                      { id: 'green', label: 'Emerald Mint', colorClass: 'bg-[#10B981]' },
-                      { id: 'purple', label: 'Royal Violet', colorClass: 'bg-[#8B5CF6]' },
-                    ].map((col) => {
-                      const active = accent === col.id;
-                      return (
-                        <button
-                          key={col.id}
-                          type="button"
-                          onClick={() => handleSaveAppearance(undefined, col.id as AccentColor)}
-                          className={`p-2 rounded-xl border flex flex-col items-center gap-1.5 transition ${
-                            active
-                              ? 'border-gold-500 bg-gold-500/10'
-                              : 'border-slate-200 dark:border-obsidian-800 hover:border-slate-300 dark:hover:border-obsidian-700'
-                          }`}
-                        >
-                          <span className={`w-5 h-5 rounded-full ${col.colorClass} shadow-inner flex items-center justify-center`}>
-                            {active && <Check className="w-3 h-3 text-white" />}
-                          </span>
-                          <span className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">
-                            {col.id.toUpperCase()}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  <div className="p-3 rounded-xl border border-slate-200 dark:border-obsidian-800 bg-slate-50/50 dark:bg-obsidian-950/40 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <UserAvatar
+                        name={user?.displayName || user?.username || 'User'}
+                        avatar={user?.avatar}
+                        size="md"
+                      />
+                      <div>
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
+                          {user?.avatar?.label || 'Default Persona'}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          SVG Identity Avatar
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAvatarModalOpen(true)}
+                      className="px-3 py-1.5 rounded-lg border border-gold-500/30 bg-gold-500/10 text-gold-600 dark:text-gold-400 hover:bg-gold-500/20 text-xs font-medium transition"
+                    >
+                      Change Avatar
+                    </button>
                   </div>
                 </div>
 
@@ -623,6 +638,14 @@ export const RightSettingsDrawer: React.FC<RightSettingsDrawerProps> = ({ isOpen
 
         </div>
       </div>
+
+      <AvatarPickerModal
+        isOpen={isAvatarModalOpen}
+        onClose={() => setIsAvatarModalOpen(false)}
+        selectedAvatar={user?.avatar}
+        onSelect={handleAvatarSelect}
+      />
     </div>
   );
 };
+

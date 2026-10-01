@@ -4,9 +4,6 @@ import { UserPlus, Check, X, Eye, EyeOff, ShieldCheck, Sparkles, AlertCircle } f
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
 import { PasswordStrengthMeter, getPasswordStrength } from '../components/PasswordStrengthMeter';
-import { AvatarPickerModal } from '../components/AvatarPickerModal';
-import { UserAvatar } from '../components/UserAvatar';
-import { AvatarData } from '../types';
 import { api } from '../services/api';
 
 export const RegisterPage: React.FC = () => {
@@ -15,11 +12,8 @@ export const RegisterPage: React.FC = () => {
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [avatar, setAvatar] = useState<AvatarData>({ category: 'technical', id: 'tech-wizard' });
-  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
   // Live Username Availability state
   const [usernameStatus, setUsernameStatus] = useState<{
@@ -84,7 +78,7 @@ export const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !email.trim() || !displayName.trim() || !password) return;
+    if (!username.trim() || !email.trim() || !password) return;
 
     if (!usernameStatus.available) {
       setError('Please choose a valid and available username.');
@@ -101,12 +95,12 @@ export const RegisterPage: React.FC = () => {
     setError(null);
 
     try {
+      const clean = username.trim().toLowerCase();
       await register({
-        username: username.trim().toLowerCase(),
+        username: clean,
         email: email.trim().toLowerCase(),
-        displayName: displayName.trim(),
+        displayName: clean,
         password,
-        avatar,
       });
 
       // Forward to personalized 5-question onboarding!
@@ -144,41 +138,6 @@ export const RegisterPage: React.FC = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Avatar Selector Banner */}
-            <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-gold-500/20 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <UserAvatar avatar={avatar} size="lg" showGoldBorder />
-                <div>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white block">Profile Avatar</span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    No real photos needed. Choose from curated vector avatars.
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsAvatarModalOpen(true)}
-                className="px-3 py-1.5 rounded-lg bg-gold-500/10 hover:bg-gold-500/20 text-gold-600 dark:text-gold-400 text-xs font-semibold border border-gold-500/30 transition-colors"
-              >
-                Change
-              </button>
-            </div>
-
-            {/* Display Name */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Display Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Harsha Vardhan"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-obsidian-950 border border-slate-300 dark:border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-gold-500 transition-colors"
-                required
-              />
-            </div>
-
             {/* Username with Live Availability Indicator */}
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -276,13 +235,6 @@ export const RegisterPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <AvatarPickerModal
-        isOpen={isAvatarModalOpen}
-        onClose={() => setIsAvatarModalOpen(false)}
-        selectedAvatar={avatar}
-        onSelect={(newAvatar) => setAvatar(newAvatar)}
-      />
     </div>
   );
 };

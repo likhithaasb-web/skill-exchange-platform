@@ -88,14 +88,15 @@ exports.register = async (req, res, next) => {
   try {
     const { username, email, password, displayName, avatar } = req.body;
 
-    if (!username || !email || !password || !displayName) {
+    if (!username || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'All fields (username, email, password, displayName) are required.'
+        message: 'Username, email, and password are required.'
       });
     }
 
     const cleanUsername = username.trim().toLowerCase();
+    const finalDisplayName = (displayName && displayName.trim()) || cleanUsername;
 
     // Validate username
     if (cleanUsername.length < 4 || cleanUsername.length > 20 || !/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
@@ -141,7 +142,7 @@ exports.register = async (req, res, next) => {
       username: cleanUsername,
       email: email.trim().toLowerCase(),
       passwordHash,
-      displayName: displayName.trim(),
+      displayName: finalDisplayName,
       avatar: avatar || { category: 'technical', id: 'tech-cyber-1' },
       security: {
         activeSessions: [{

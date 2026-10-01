@@ -22,19 +22,23 @@ import {
   LogOut,
   Clock,
   FileText,
-  Share2
+  Share2,
+  Smile
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Navbar } from '../components/Navbar';
 import { Sidebar } from '../components/Sidebar';
-import { AccentColor, InterfaceDensity, MotionPreference, ThemeMode } from '../types';
+import { AvatarPickerModal } from '../components/AvatarPickerModal';
+import { UserAvatar } from '../components/UserAvatar';
+import { AccentColor, AvatarData, InterfaceDensity, MotionPreference, ThemeMode } from '../types';
 import { api } from '../services/api';
 import { exportActivityPDF } from '../utils/exportActivityPDF';
 
 export const SettingsPage: React.FC = () => {
   const { user, profile, updateUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const {
     theme,
     accent,
@@ -235,6 +239,22 @@ export const SettingsPage: React.FC = () => {
     setTimeout(() => setSavedMessage(null), 3500);
   };
 
+  const handleAvatarSelect = async (newAvatar: AvatarData) => {
+    setIsAvatarModalOpen(false);
+    if (!user) return;
+    try {
+      const res = await api.updateProfile({ avatar: newAvatar });
+      if (res.success && res.user) {
+        updateUser(res.user);
+        setSavedMessage('Persona avatar updated successfully!');
+        setTimeout(() => setSavedMessage(null), 3000);
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to update avatar.');
+      setTimeout(() => setErrorMessage(null), 3500);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-obsidian-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 ambient-canvas">
       <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
@@ -324,6 +344,42 @@ export const SettingsPage: React.FC = () => {
           {/* TAB 1: APPEARANCE */}
           {activeTab === 'appearance' && (
             <div className="space-y-6">
+              {/* Persona Avatar */}
+              <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-800 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    {user?.avatar && (
+                      <UserAvatar
+                        avatar={user.avatar}
+                        size="xl"
+                        showGoldBorder
+                        className="ring-4 ring-gold-500/20 shrink-0"
+                      />
+                    )}
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        <Smile className="w-4 h-4 text-gold-500" />
+                        Persona Avatar
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Your digital persona across Skill Studios, Passports, and peer exchanges. No real photo required.
+                      </p>
+                      <span className="text-[11px] text-gold-600 dark:text-gold-400 font-medium block mt-1">
+                        Current: @{user?.username} ({user?.avatar?.category || 'custom'} - {user?.avatar?.id || 'avatar'})
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsAvatarModalOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs shadow-gold-subtle transition-all hover:scale-105 active:scale-95 shrink-0"
+                  >
+                    Change Persona Avatar
+                  </button>
+                </div>
+              </div>
+
               {/* Color Themes */}
               <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-800 shadow-sm space-y-4">
                 <div>
@@ -369,48 +425,6 @@ export const SettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Accent Palette */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-800 shadow-sm space-y-4">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <Palette className="w-4 h-4 text-gold-500" />
-                    Accent Color Palette
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Select a refined primary accent for badges, indicators, and buttons.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { id: 'gold', name: 'Master Gold', hex: '#D4AF37' },
-                    { id: 'blue', name: 'Royal Blue', hex: '#3B82F6' },
-                    { id: 'green', name: 'Emerald Mint', hex: '#10B981' },
-                    { id: 'purple', name: 'Royal Violet', hex: '#8B5CF6' },
-                  ].map((c) => {
-                    const isSelected = accent === c.id;
-                    return (
-                      <button
-                        type="button"
-                        key={c.id}
-                        onClick={() => {
-                          setAccent(c.id as AccentColor);
-                          handleSaveAppearance(theme, c.id as AccentColor, density, motion);
-                        }}
-                        className={`p-3 rounded-xl border flex items-center gap-3 transition-all ${
-                          isSelected
-                            ? 'border-gold-500 bg-gold-500/10 ring-1 ring-gold-500/40'
-                            : 'border-slate-200 dark:border-obsidian-800 bg-slate-50/50 dark:bg-obsidian-950/40 hover:border-slate-300'
-                        }`}
-                      >
-                        <div className="w-5 h-5 rounded-full shrink-0 shadow-inner" style={{ backgroundColor: c.hex }} />
-                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{c.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Spacing & Density */}
               <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-obsidian-800 shadow-sm space-y-4">
                 <div>
@@ -419,15 +433,15 @@ export const SettingsPage: React.FC = () => {
                     Interface Density
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Adjust content spacing across your Skill Studio and dashboards.
+                    Actively adjusts font scaling, card paddings, and layout density across the platform.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    { id: 'compact', title: 'Compact', desc: 'Dense tables and compact toolbars' },
-                    { id: 'comfortable', title: 'Comfortable', desc: 'Balanced padding and standard cards' },
-                    { id: 'spacious', title: 'Spacious', desc: 'Generous whitespace and larger touch targets' },
+                    { id: 'compact', title: 'Compact', desc: 'Dense tables, tighter margins, and compact cards' },
+                    { id: 'comfortable', title: 'Comfortable', desc: 'Balanced padding and standard comfortable spacing' },
+                    { id: 'spacious', title: 'Spacious', desc: 'Generous whitespace, large cards, and relaxed margins' },
                   ].map((d) => (
                     <button
                       type="button"
@@ -438,7 +452,7 @@ export const SettingsPage: React.FC = () => {
                       }}
                       className={`p-3.5 rounded-xl border text-left text-xs transition-all ${
                         density === d.id
-                          ? 'border-gold-500 bg-gold-500/10 text-gold-600 dark:text-gold-400 font-semibold ring-1 ring-gold-500/40'
+                          ? 'border-gold-500 bg-gold-500/10 text-gold-600 dark:text-gold-400 font-semibold ring-1 ring-gold-500/40 shadow-sm'
                           : 'border-slate-200 dark:border-obsidian-800 bg-slate-50/50 dark:bg-obsidian-950/40 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                       }`}
                     >
@@ -446,6 +460,23 @@ export const SettingsPage: React.FC = () => {
                       <span className="text-[11px] text-slate-400 dark:text-slate-500">{d.desc}</span>
                     </button>
                   ))}
+                </div>
+
+                {/* Live Preview Box */}
+                <div className="p-3 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5 space-y-2">
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                    Active Density Live Preview ({density.toUpperCase()})
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-obsidian-950 border border-slate-200 dark:border-white/10 flex items-center justify-between">
+                      <span className="text-xs font-medium">Dashboard Card Padding</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-gold-500/10 text-gold-500 font-mono">SX-{density}</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-obsidian-950 border border-slate-200 dark:border-white/10 flex items-center justify-between">
+                      <span className="text-xs font-medium">Studio Row Spacing</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-mono">Active</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -457,14 +488,14 @@ export const SettingsPage: React.FC = () => {
                     Motion & Transitions
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Respect sensory preferences by toggling dynamic micro-interactions.
+                    Control interface physics, hover effects, celebratory confetti, and animated keyframes.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
                     { id: 'full', title: 'Full Animations', desc: 'Smooth spring animations and celebratory transitions' },
-                    { id: 'reduced', title: 'Reduced Motion', desc: 'Instant UI changes with minimal motion' },
+                    { id: 'reduced', title: 'Reduced Motion', desc: 'Instant UI changes with zero animated shifts' },
                   ].map((m) => (
                     <button
                       type="button"
@@ -475,7 +506,7 @@ export const SettingsPage: React.FC = () => {
                       }}
                       className={`p-3.5 rounded-xl border text-left text-xs transition-all ${
                         motion === m.id
-                          ? 'border-gold-500 bg-gold-500/10 text-gold-600 dark:text-gold-400 font-semibold ring-1 ring-gold-500/40'
+                          ? 'border-gold-500 bg-gold-500/10 text-gold-600 dark:text-gold-400 font-semibold ring-1 ring-gold-500/40 shadow-sm'
                           : 'border-slate-200 dark:border-obsidian-800 bg-slate-50/50 dark:bg-obsidian-950/40 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                       }`}
                     >
@@ -483,6 +514,24 @@ export const SettingsPage: React.FC = () => {
                       <span className="text-[11px] text-slate-400 dark:text-slate-500">{m.desc}</span>
                     </button>
                   ))}
+                </div>
+
+                {/* Live Motion Test Preview */}
+                <div className="p-3 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                      Live Physics Status: {motion === 'full' ? 'Full Animations Running' : 'Animations Halted (Reduced Motion)'}
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {motion === 'full' ? 'Dynamic pulses, smooth springs & transitions active' : 'All transforms and pulsing keyframes are halted'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3.5 h-3.5 rounded-full bg-gold-400 ${motion === 'full' ? 'animate-ping' : ''}`} />
+                    <div className={`w-7 h-7 rounded-lg bg-gold-500 flex items-center justify-center text-obsidian-950 font-bold text-xs shadow-sm ${motion === 'full' ? 'animate-bounce' : ''}`}>
+                      ★
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -868,6 +917,14 @@ export const SettingsPage: React.FC = () => {
 
         </main>
       </div>
+
+      <AvatarPickerModal
+        isOpen={isAvatarModalOpen}
+        onClose={() => setIsAvatarModalOpen(false)}
+        selectedAvatar={user?.avatar}
+        onSelect={handleAvatarSelect}
+      />
     </div>
   );
 };
+

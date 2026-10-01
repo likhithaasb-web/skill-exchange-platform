@@ -105,10 +105,10 @@ export const LoginPage: React.FC = () => {
             </span>
             <div className="grid grid-cols-2 gap-2 text-xs">
               {[
-                { username: 'alex_codes', label: 'Alex (React & JS)' },
-                { username: 'cyber_nova', label: 'Nova (Cybersecurity)' },
-                { username: 'designfox', label: 'Elena (Figma & UI/UX)' },
-                { username: 'python_master', label: 'Harsha (Python)' },
+                { username: 'alex_codes', label: 'React & JS' },
+                { username: 'cyber_nova', label: 'Cybersecurity' },
+                { username: 'designfox', label: 'Figma & UI/UX' },
+                { username: 'python_master', label: 'Python & Data' },
               ].map((acc) => (
                 <button
                   type="button"

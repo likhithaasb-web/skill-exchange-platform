@@ -98,11 +98,122 @@ html:not(.dark) .ambient-glow-orbs .orb-2 {
   background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0) 70%);
 }
 
-/* Reduced motion preference */
-[data-motion="reduced"] * {
-  animation-duration: 0.01ms !important;
+/* ==========================================================================
+   MOTION PREFERENCES (Full vs Reduced)
+   ========================================================================== */
+
+/* Reduced motion preference - Instantly disables all animations and transitions */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-motion="reduced"] .animate-pulse,
+html[data-motion="reduced"] .animate-spin,
+html[data-motion="reduced"] .animate-bounce,
+html[data-motion="reduced"] .animate-shimmer,
+html[data-motion="reduced"] .animate-in {
+  animation: none !important;
+  transform: none !important;
+}
+
+/* Full motion preference - Smooth responsive physics */
+html[data-motion="full"] button,
+html[data-motion="full"] a,
+html[data-motion="full"] input {
+  transition-property: color, background-color, border-color, transform, opacity, box-shadow;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 200ms;
+}
+
+/* ==========================================================================
+   INTERFACE DENSITY (Compact, Comfortable, Spacious)
+   ========================================================================== */
+
+/* 1. COMPACT DENSITY: Dense, tightly packed, data-rich */
+html[data-density="compact"] {
+  font-size: 13.5px;
+}
+html[data-density="compact"] main {
+  padding-top: 1rem !important;
+  padding-bottom: 1.5rem !important;
+}
+html[data-density="compact"] .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1rem !important;
+}
+html[data-density="compact"] .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.85rem !important;
+}
+html[data-density="compact"] .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.65rem !important;
+}
+html[data-density="compact"] .p-6,
+html[data-density="compact"] .sm\:p-8,
+html[data-density="compact"] .sm\:p-6 {
+  padding: 1rem !important;
+}
+html[data-density="compact"] .p-5 {
+  padding: 0.75rem !important;
+}
+html[data-density="compact"] .p-4 {
+  padding: 0.65rem !important;
+}
+html[data-density="compact"] .gap-6 {
+  gap: 1rem !important;
+}
+html[data-density="compact"] .gap-4 {
+  gap: 0.65rem !important;
+}
+html[data-density="compact"] .gap-3 {
+  gap: 0.5rem !important;
+}
+
+/* 2. COMFORTABLE DENSITY (Standard Default) */
+html[data-density="comfortable"] {
+  font-size: 14px;
+}
+
+/* 3. SPACIOUS DENSITY: Airy, generous whitespace, large touch targets */
+html[data-density="spacious"] {
+  font-size: 15px;
+}
+html[data-density="spacious"] main {
+  padding-top: 2.5rem !important;
+  padding-bottom: 3.5rem !important;
+}
+html[data-density="spacious"] .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 2rem !important;
+}
+html[data-density="spacious"] .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.65rem !important;
+}
+html[data-density="spacious"] .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.35rem !important;
+}
+html[data-density="spacious"] .p-6,
+html[data-density="spacious"] .sm\:p-8,
+html[data-density="spacious"] .sm\:p-6 {
+  padding: 2.25rem !important;
+}
+html[data-density="spacious"] .p-5 {
+  padding: 1.65rem !important;
+}
+html[data-density="spacious"] .p-4 {
+  padding: 1.25rem !important;
+}
+html[data-density="spacious"] .gap-6 {
+  gap: 2rem !important;
+}
+html[data-density="spacious"] .gap-4 {
+  gap: 1.5rem !important;
+}
+html[data-density="spacious"] .gap-3 {
+  gap: 1rem !important;
 }
 
 /* Custom Scrollbars */
@@ -143,15 +254,4 @@ html:not(.dark) .ambient-glow-orbs .orb-2 {
   );
   background-size: 200% 100%;
   animation: shimmer 3s infinite linear;
-}
-
-/* Density utility wrappers */
-[data-density="compact"] .density-pad {
-  padding: 0.5rem 0.75rem;
-}
-[data-density="comfortable"] .density-pad {
-  padding: 1rem 1.25rem;
-}
-[data-density="spacious"] .density-pad {
-  padding: 1.5rem 2rem;
 }
