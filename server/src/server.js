@@ -170,6 +170,20 @@ async function startServer() {
     await mongoose.connect(MONGO_URI);
     console.log('✓ Successfully connected to MongoDB.');
 
+    // Auto-seed test accounts if database is fresh/empty
+    try {
+      const User = require('./models/User');
+      const userCount = await User.countDocuments();
+      if (userCount === 0) {
+        console.log('[AutoSeed] Empty database detected. Seeding test accounts...');
+        const { seedDatabase } = require('./seed');
+        await seedDatabase(false);
+        console.log('[AutoSeed] Test accounts successfully seeded!');
+      }
+    } catch (seedErr) {
+      console.warn('[AutoSeed] Non-critical warning seeding demo data:', seedErr.message);
+    }
+
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`===============================================`);
       console.log(`  SKILLX BACKEND & SOCKET.IO SERVER RUNNING   `);

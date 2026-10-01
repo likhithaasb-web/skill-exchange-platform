@@ -14,10 +14,12 @@ const DirectMessage = require('./models/DirectMessage');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/skillx_db';
 
-async function seedDatabase() {
+async function seedDatabase(exitOnComplete = true) {
   try {
-    console.log('Connecting to MongoDB at:', MONGO_URI);
-    await mongoose.connect(MONGO_URI);
+    if (mongoose.connection.readyState !== 1) {
+      console.log('Connecting to MongoDB at:', MONGO_URI);
+      await mongoose.connect(MONGO_URI);
+    }
     console.log('Connected! Clearing existing collections...');
 
     await Promise.all([
@@ -514,12 +516,21 @@ if __name__ == '__main__':
     console.log('  - python_master / Password123!');
     console.log('  - cloud_sarah / Password123!');
 
-    await mongoose.disconnect();
-    process.exit(0);
+    if (exitOnComplete) {
+      await mongoose.disconnect();
+      process.exit(0);
+    }
   } catch (err) {
     console.error('Seeding error:', err);
-    process.exit(1);
+    if (exitOnComplete) {
+      process.exit(1);
+    }
+    throw err;
   }
 }
 
-seedDatabase();
+if (require.main === module) {
+  seedDatabase(true);
+}
+
+module.exports = { seedDatabase };
