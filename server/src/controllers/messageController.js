@@ -137,7 +137,7 @@ exports.sendMessage = async (req, res, next) => {
     }
 
     // Check if blocked
-    if (recipient.security?.blockedUsers?.includes(senderId)) {
+    if (recipient.security?.blockedUsers?.some(id => id.toString() === senderId.toString())) {
       return res.status(403).json({ success: false, message: 'Unable to message this user.' });
     }
 
@@ -151,15 +151,19 @@ exports.sendMessage = async (req, res, next) => {
 
     await message.save();
 
-    // Create a notification for the recipient
-    await Notification.create({
-      recipientId,
-      senderId,
-      type: 'exchange_request',
-      title: `New message from @${req.user.username}`,
-      message: text.trim().slice(0, 100),
-      link: `/messages?peer=${req.user._id}`,
-    });
+    // Create a notification for the recipient safely
+    try {
+      await Notification.create({
+        recipientId,
+        senderId,
+        type: 'exchange_request',
+        title: `New message from @${req.user.username}`,
+        message: text.trim().slice(0, 100),
+        link: `/messages?userId=${req.user._id}`,
+      });
+    } catch (notifErr) {
+      console.warn('Failed to create message notification:', notifErr);
+    }
 
     return res.status(201).json({
       success: true,

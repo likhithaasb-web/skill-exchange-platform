@@ -10,9 +10,10 @@ function setupStudioSockets(io) {
 
     // Track user presence and connect to user-specific room for direct messages
     socket.on('user-online', (user) => {
-      if (!user || !user._id) return;
+      if (!user) return;
+      const uid = (user._id || user.id || '').toString();
+      if (!uid) return;
       currentUser = user;
-      const uid = user._id.toString();
       socket.join(`user:${uid}`);
 
       onlineUsers.set(uid, {
@@ -31,13 +32,16 @@ function setupStudioSockets(io) {
     // Real-Time Direct Messaging
     socket.on('direct-message-send', ({ recipientId, message }) => {
       if (!recipientId || !message) return;
-      io.to(`user:${recipientId}`).emit('direct-message-received', message);
+      const targetId = (recipientId?._id || recipientId?.id || recipientId).toString();
+      io.to(`user:${targetId}`).emit('direct-message-received', message);
     });
 
     socket.on('direct-typing', ({ recipientId, isTyping }) => {
       if (!recipientId || !currentUser) return;
-      io.to(`user:${recipientId}`).emit('direct-typing-status', {
-        senderId: currentUser._id,
+      const targetId = (recipientId?._id || recipientId?.id || recipientId).toString();
+      const senderUid = (currentUser?._id || currentUser?.id || '').toString();
+      io.to(`user:${targetId}`).emit('direct-typing-status', {
+        senderId: senderUid,
         username: currentUser.username,
         isTyping,
       });

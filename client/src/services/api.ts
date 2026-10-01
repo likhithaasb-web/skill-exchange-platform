@@ -440,12 +440,22 @@ export const api = {
   },
 
   async sendDirectMessage(payload: { recipientId: string; text: string; attachments?: any[] }) {
-    const res = await fetch(`${API_BASE}/messages`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(payload),
-    });
-    return handleResponse(res);
+    try {
+      const res = await fetch(`${API_BASE}/messages/send`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse(res);
+    } catch (err: any) {
+      // Fallback to /messages root endpoint if /messages/send has any issue
+      const fallbackRes = await fetch(`${API_BASE}/messages`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      return await handleResponse(fallbackRes);
+    }
   },
 
   async markConversationRead(peerId: string) {

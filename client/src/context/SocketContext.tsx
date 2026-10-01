@@ -24,18 +24,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Connect to server origin or configured backend URL
     const socketUrl = (import.meta.env.VITE_SOCKET_URL as string) ||
                       (import.meta.env.VITE_API_URL as string) ||
-                      window.location.origin;
+                      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : window.location.origin);
 
     const socketInstance = io(socketUrl, {
       autoConnect: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
+      transports: ['websocket', 'polling'],
     });
 
     socketInstance.on('connect', () => {
       setIsConnected(true);
-      if (user && user._id) {
-        socketInstance.emit('user-online', user);
+      if (user && (user._id || (user as any).id)) {
+        socketInstance.emit('user-online', {
+          ...user,
+          _id: (user._id || (user as any).id).toString(),
+        });
       }
     });
 
@@ -56,8 +60,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // If user state updates while already connected, emit user-online
   useEffect(() => {
-    if (socket && isConnected && user && user._id) {
-      socket.emit('user-online', user);
+    if (socket && isConnected && user && (user._id || (user as any).id)) {
+      socket.emit('user-online', {
+        ...user,
+        _id: (user._id || (user as any).id).toString(),
+      });
     }
   }, [user, socket, isConnected]);
 

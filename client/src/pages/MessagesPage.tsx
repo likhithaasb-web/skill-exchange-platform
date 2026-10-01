@@ -42,12 +42,13 @@ export const MessagesPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const targetPeerId = searchParams.get('userId');
+  const targetPeerId = searchParams.get('userId') || searchParams.get('peerId') || searchParams.get('peer');
+  const targetUsername = searchParams.get('user') || searchParams.get('username');
 
-  // Load conversations on mount
+  // Load conversations on mount or query change
   useEffect(() => {
     loadConversations();
-  }, [user?._id]);
+  }, [user?._id, targetPeerId, targetUsername]);
 
   const loadConversations = async () => {
     setIsLoadingList(true);
@@ -56,14 +57,25 @@ export const MessagesPage: React.FC = () => {
       if (res.success && res.conversations) {
         setConversations(res.conversations);
 
-        // If targetPeerId specified in query, pick it
+        // If targetPeerId or targetUsername specified in query, pick it
         if (targetPeerId) {
           const found = res.conversations.find((c: Conversation) => c.peer._id === targetPeerId);
           if (found) {
             setSelectedPeer(found.peer);
           } else {
-            // Need to load target user details
             fetchPeerById(targetPeerId);
+          }
+        } else if (targetUsername) {
+          const cleanUser = targetUsername.replace(/^@/, '');
+          const found = res.conversations.find((c: Conversation) => c.peer.username.toLowerCase() === cleanUser.toLowerCase());
+          if (found) {
+            setSelectedPeer(found.peer);
+          } else {
+            api.getProfile(cleanUser).then(pRes => {
+              if (pRes.success && pRes.user) {
+                setSelectedPeer(pRes.user);
+              }
+            }).catch(() => {});
           }
         } else if (res.conversations.length > 0 && !selectedPeer) {
           // Default select first conversation on desktop
@@ -79,7 +91,6 @@ export const MessagesPage: React.FC = () => {
 
   const fetchPeerById = async (peerId: string) => {
     try {
-      // Find by getting messages or looking up profile
       const res = await api.getMessagesWithPeer(peerId);
       if (res.success && res.peer) {
         setSelectedPeer(res.peer);
@@ -96,6 +107,25 @@ export const MessagesPage: React.FC = () => {
     } else {
       setMessages([]);
     }
+  }, [selectedPeer?._id]);
+
+  // Robust fallback polling every 4s to ensure messages always sync even if WebSockets are slow
+  useEffect(() => {
+    if (!selectedPeer) return;
+    const interval = setInterval(() => {
+      api.getMessagesWithPeer(selectedPeer._id).then(res => {
+        if (res.success && res.messages) {
+          setMessages(prev => {
+            if (res.messages.length !== prev.length || res.messages[res.messages.length - 1]?._id !== prev[prev.length - 1]?._id) {
+              return res.messages;
+            }
+            return prev;
+          });
+        }
+      }).catch(() => {});
+    }, 4000);
+
+    return () => clearInterval(interval);
   }, [selectedPeer?._id]);
 
   const loadMessagesForPeer = async (peerId: string) => {
@@ -203,7 +233,10 @@ export const MessagesPage: React.FC = () => {
 
       if (res.success && res.message) {
         const newMsg: DirectMessage = res.message;
-        setMessages(prev => [...prev, newMsg]);
+        setMessages(prev => {
+          if (prev.some(m => m._id === newMsg._id)) return prev;
+          return [...prev, newMsg];
+        });
 
         // Emit through socket for real-time delivery
         if (socket) {
@@ -225,12 +258,22 @@ export const MessagesPage: React.FC = () => {
             // Move to top
             const [item] = updated.splice(index, 1);
             return [item, ...updated];
+          } else {
+            return [{
+              peer: selectedPeer,
+              lastMessage: newMsg,
+              unreadCount: 0,
+            }, ...prev];
           }
-          return prev;
         });
+      } else {
+        alert(res.message || 'Failed to deliver message.');
+        setInputText(text); // restore
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to send message:', err);
+      alert(err.message || 'Could not send message. Please verify network or server status.');
+      setInputText(text); // restore
     } finally {
       setIsSending(false);
     }

@@ -34,11 +34,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/passport', label: 'Skill Passport', icon: Award, highlight: true },
-    { to: '/messages', label: 'Direct Messages', icon: MessageSquare, highlight: true },
+    { to: '/passport', label: 'Skill Passport', icon: Award },
+    { to: '/messages', label: 'Direct Messages', icon: MessageSquare },
     { to: '/discover', label: 'Discover Peers', icon: Compass },
     { to: '/exchanges', label: 'My Exchanges', icon: ArrowLeftRight },
-    { to: '/studio/active', label: 'Skill Studio', icon: MonitorPlay, highlight: true },
+    { to: '/studio/active', label: 'Skill Studio', icon: MonitorPlay },
     { to: '/projects', label: 'Collaborative Projects', icon: FolderGit2 },
     { to: '/reviews', label: 'Peer Reviews', icon: Star },
     { to: '/settings', label: 'Settings', icon: Sliders },
@@ -92,17 +92,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-all relative ${
                       isActive
-                        ? 'bg-gold-500/10 dark:bg-gold-500/15 text-gold-700 dark:text-gold-300 font-semibold border border-gold-500/30 shadow-inner-glass'
-                        : item.highlight
-                        ? 'text-gold-700 dark:text-gold-400 hover:bg-gold-500/10 font-medium'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/[0.05] font-medium'
+                        ? 'bg-gold-500/15 text-slate-900 dark:text-white font-semibold border border-gold-500/30 shadow-inner-glass'
+                        : 'text-slate-700 dark:text-white hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/[0.08] font-medium'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-gold-500' : ''}`} />
-                      <span>{item.label}</span>
+                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-gold-400' : 'text-slate-500 dark:text-slate-300'}`} />
+                      <span className="text-slate-900 dark:text-white font-medium">{item.label}</span>
                       {isActive && (
                         <span className="w-1.5 h-1.5 rounded-full bg-gold-500 shadow-[0_0_8px_rgba(234,179,8,0.5)] ml-auto shrink-0" />
                       )}
