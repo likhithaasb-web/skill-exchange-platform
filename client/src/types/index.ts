@@ -260,6 +260,8 @@ export interface MatchPeer {
     whyMatch: string[];
     breakdown: Array<{ item: string; points: number; detail: string }>;
   };
+  similarityScore?: number;
+  suggestionReason?: string;
 }
 
 export interface DirectMessage {

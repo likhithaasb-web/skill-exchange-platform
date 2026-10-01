@@ -5,6 +5,35 @@ const SkillStudio = require('../models/SkillStudio');
 const Notification = require('../models/Notification');
 const { calculateSkillMatch } = require('../utils/matchingEngine');
 
+const RELATED_SKILLS_MAP = {
+  python: ['cybersecurity', 'data science', 'django', 'backend', 'machine learning', 'linux', 'api'],
+  react: ['javascript', 'typescript', 'frontend', 'ui/ux', 'next.js', 'figma', 'html', 'css'],
+  javascript: ['react', 'typescript', 'node.js', 'frontend', 'web development'],
+  typescript: ['javascript', 'react', 'node.js', 'angular', 'frontend'],
+  cybersecurity: ['python', 'linux', 'ethical hacking', 'networking', 'security', 'cryptography'],
+  figma: ['ui/ux', 'design', 'prototyping', 'product design', 'frontend', 'react'],
+  design: ['figma', 'ui/ux', 'graphic design', 'illustration', 'photoshop', 'blender'],
+  docker: ['kubernetes', 'cloud', 'devops', 'linux', 'ci/cd', 'aws'],
+  linux: ['cybersecurity', 'docker', 'bash', 'devops', 'python', 'cloud'],
+  backend: ['python', 'node.js', 'sql', 'databases', 'api', 'golang'],
+  frontend: ['react', 'javascript', 'css', 'html', 'tailwind', 'ui/ux', 'figma'],
+  security: ['cybersecurity', 'linux', 'python', 'networking', 'cryptography']
+};
+
+function getRelatedKeywords(term) {
+  if (!term) return [];
+  const lower = term.toLowerCase().trim();
+  const keywords = new Set();
+  keywords.add(lower);
+
+  for (const [key, related] of Object.entries(RELATED_SKILLS_MAP)) {
+    if (lower.includes(key) || key.includes(lower)) {
+      related.forEach(r => keywords.add(r));
+    }
+  }
+  return Array.from(keywords);
+}
+
 exports.discoverPeers = async (req, res, next) => {
   try {
     const { skill, category, level, language, mutualOnly } = req.query;
@@ -55,6 +84,8 @@ exports.discoverPeers = async (req, res, next) => {
       };
     });
 
+    const allCandidates = [...peers];
+
     // Apply search filter if provided
     if (skill) {
       const queryLower = skill.toLowerCase().trim();
@@ -68,20 +99,20 @@ exports.discoverPeers = async (req, res, next) => {
     if (category) {
       const catLower = category.toLowerCase().trim();
       peers = peers.filter(item => {
-        return item.profile.skillsTeaching.some(s => s.category.toLowerCase().includes(catLower)) ||
-               item.profile.skillsLearning.some(s => s.category.toLowerCase().includes(catLower));
+        return item.profile.skillsTeaching.some(s => s.category?.toLowerCase().includes(catLower)) ||
+               item.profile.skillsLearning.some(s => s.category?.toLowerCase().includes(catLower));
       });
     }
 
     if (level) {
       peers = peers.filter(item => {
-        return item.profile.skillsTeaching.some(s => s.level.toLowerCase() === level.toLowerCase().trim());
+        return item.profile.skillsTeaching.some(s => s.level?.toLowerCase() === level.toLowerCase().trim());
       });
     }
 
     if (language) {
       peers = peers.filter(item => {
-        return item.user.languages.some(l => l.toLowerCase() === language.toLowerCase().trim());
+        return item.user.languages?.some(l => l.toLowerCase() === language.toLowerCase().trim());
       });
     }
 
@@ -96,10 +127,83 @@ exports.discoverPeers = async (req, res, next) => {
       return b.matchInfo.compatibilityScore - a.matchInfo.compatibilityScore;
     });
 
+    // Compute Similar Suggestions
+    const matchedIds = new Set(peers.map(p => p.user._id.toString()));
+    const unselectedCandidates = allCandidates.filter(c => !matchedIds.has(c.user._id.toString()));
+
+    const relatedKeywords = skill ? getRelatedKeywords(skill) : [];
+    const myLearningSkills = myProfile?.skillsLearning?.map(s => s.name.toLowerCase()) || [];
+    const myTeachingSkills = myProfile?.skillsTeaching?.map(s => s.name.toLowerCase()) || [];
+
+    const poolForSuggestions = unselectedCandidates.length > 0 ? unselectedCandidates : allCandidates;
+    const scoredSuggestions = poolForSuggestions.map(c => {
+      let simScore = c.matchInfo?.compatibilityScore || 0;
+      let reason = '';
+
+      // Check if candidate teaches what current user wants to learn
+      const teachesUserGoal = c.profile?.skillsTeaching?.find(s =>
+        myLearningSkills.some(ml => s.name.toLowerCase().includes(ml) || ml.includes(s.name.toLowerCase()))
+      );
+      if (teachesUserGoal) {
+        simScore += 45;
+        reason = `Teaches ${teachesUserGoal.name} (Matches your learning goal)`;
+      }
+
+      // Check if candidate wants to learn what current user teaches
+      const wantsUserSkill = c.profile?.skillsLearning?.find(s =>
+        myTeachingSkills.some(mt => s.name.toLowerCase().includes(mt) || mt.includes(s.name.toLowerCase()))
+      );
+      if (wantsUserSkill) {
+        simScore += 35;
+        if (!reason) reason = `Wants to learn ${wantsUserSkill.name} from you`;
+      }
+
+      // Check related keyword match if search term provided
+      if (skill && relatedKeywords.length > 0) {
+        const relatedSkill = c.profile?.skillsTeaching?.find(s =>
+          relatedKeywords.some(kw => s.name.toLowerCase().includes(kw) || kw.includes(s.name.toLowerCase()))
+        );
+        if (relatedSkill) {
+          simScore += 35;
+          if (!reason) reason = `Related to '${skill}': Offers ${relatedSkill.name}`;
+        }
+      }
+
+      // Category overlap
+      if (category) {
+        const catMatch = c.profile?.skillsTeaching?.some(s => s.category?.toLowerCase().includes(category.toLowerCase()));
+        if (catMatch) {
+          simScore += 25;
+          if (!reason) reason = `Shares category: ${category}`;
+        }
+      }
+
+      // Mutual match bonus
+      if (c.matchInfo?.isMutualMatch) {
+        simScore += 50;
+        if (!reason) reason = `Mutual Match • High Compatibility`;
+      }
+
+      if (!reason) {
+        const topTeach = c.profile?.skillsTeaching?.[0]?.name;
+        reason = topTeach ? `Offers ${topTeach} • Recommended Peer` : `Verified Exchange Peer`;
+      }
+
+      return {
+        ...c,
+        similarityScore: simScore,
+        suggestionReason: reason
+      };
+    });
+
+    scoredSuggestions.sort((a, b) => b.similarityScore - a.similarityScore);
+    const similarSuggestions = scoredSuggestions.slice(0, 6);
+
     return res.json({
       success: true,
       count: peers.length,
-      peers
+      peers,
+      similarSuggestions
     });
   } catch (err) {
     next(err);

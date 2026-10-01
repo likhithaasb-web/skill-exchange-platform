@@ -12,7 +12,8 @@ import {
   Send,
   ExternalLink,
   ShieldCheck,
-  Bell
+  Bell,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
@@ -305,13 +306,23 @@ export const DashboardPage: React.FC = () => {
                     >
                       View Passport →
                     </Link>
-                    <button
-                      onClick={() => setSelectedProposalPeer(peer)}
-                      className="px-3.5 py-1.5 rounded-lg bg-gold-500/15 hover:bg-gold-500 text-gold-600 dark:text-gold-400 hover:text-obsidian-950 font-bold text-xs border border-gold-500/30 transition-all flex items-center gap-1.5"
-                    >
-                      <Send className="w-3 h-3" />
-                      Propose Exchange
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <Link
+                        to={`/messages?userId=${peer.user._id}`}
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:border-gold-500/40 bg-slate-50 dark:bg-white/5 hover:bg-gold-500/10 text-slate-700 dark:text-slate-200 hover:text-gold-600 dark:hover:text-gold-400 font-semibold text-xs transition-all flex items-center gap-1"
+                        title="Direct message this user"
+                      >
+                        <MessageSquare className="w-3 h-3 text-gold-500" />
+                        Chat
+                      </Link>
+                      <button
+                        onClick={() => setSelectedProposalPeer(peer)}
+                        className="px-3 py-1.5 rounded-lg bg-gold-500/15 hover:bg-gold-500 text-gold-600 dark:text-gold-400 hover:text-obsidian-950 font-bold text-xs border border-gold-500/30 transition-all flex items-center gap-1"
+                      >
+                        <Send className="w-3 h-3" />
+                        Propose
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
