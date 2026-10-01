@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Award, ShieldCheck, CheckCircle2, Share2, Download, Printer, Plus, FolderGit2 } from 'lucide-react';
+import { Award, ShieldCheck, CheckCircle2, Share2, Download, Plus, FolderGit2, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
 import { Sidebar } from '../components/Sidebar';
 import { SkillPassportCard } from '../components/SkillPassportCard';
 import { SkillEditorModal } from '../components/SkillEditorModal';
 import { UserAvatar } from '../components/UserAvatar';
+import { exportActivityPDF } from '../utils/exportActivityPDF';
 
 export const PassportPage: React.FC = () => {
   const { user, profile } = useAuth();
@@ -17,8 +18,8 @@ export const PassportPage: React.FC = () => {
   const skillsTeaching = profile?.skillsTeaching || [];
   const skillsLearning = profile?.skillsLearning || [];
 
-  const handlePrint = () => {
-    window.print();
+  const handleExportPDF = () => {
+    exportActivityPDF(user, profile);
   };
 
   return (
@@ -46,12 +47,12 @@ export const PassportPage: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <button
-                onClick={handlePrint}
+                onClick={handleExportPDF}
                 className="px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-800 dark:text-slate-300 text-xs font-semibold border border-slate-300 dark:border-white/10 transition-colors flex items-center gap-1.5"
-                title="Print or Save as PDF"
+                title="Download or Print Shareable Activity PDF Report"
               >
-                <Printer className="w-4 h-4" />
-                Export / Print
+                <FileText className="w-4 h-4 text-gold-500" />
+                Export Activity PDF
               </button>
               <button
                 onClick={() => setIsSkillEditorOpen(true)}

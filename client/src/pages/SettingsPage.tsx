@@ -20,7 +20,9 @@ import {
   AlertCircle,
   Smartphone,
   LogOut,
-  Clock
+  Clock,
+  FileText,
+  Share2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -28,9 +30,10 @@ import { Navbar } from '../components/Navbar';
 import { Sidebar } from '../components/Sidebar';
 import { AccentColor, InterfaceDensity, MotionPreference, ThemeMode } from '../types';
 import { api } from '../services/api';
+import { exportActivityPDF } from '../utils/exportActivityPDF';
 
 export const SettingsPage: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { user, profile, updateUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const {
     theme,
@@ -222,6 +225,13 @@ export const SettingsPage: React.FC = () => {
     a.click();
     URL.revokeObjectURL(url);
     setSavedMessage('Your user data export has been downloaded.');
+    setTimeout(() => setSavedMessage(null), 3500);
+  };
+
+  const handleExportPDF = () => {
+    if (!user) return;
+    exportActivityPDF(user, profile);
+    setSavedMessage('Activity report PDF opened! You can save as PDF or print to share.');
     setTimeout(() => setSavedMessage(null), 3500);
   };
 
@@ -640,11 +650,31 @@ export const SettingsPage: React.FC = () => {
                   Data Portability & Rights
                 </h4>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Option 1: PDF Activity Report (Shareable) */}
+                  <div className="p-4 rounded-xl border border-gold-500/40 bg-gold-500/5 dark:bg-gold-500/10 space-y-2 relative overflow-hidden shadow-sm">
+                    <div className="flex items-center gap-2 text-gold-600 dark:text-gold-400 font-semibold text-xs sm:text-sm">
+                      <FileText className="w-4 h-4 text-gold-500" />
+                      Export Activity Report (PDF)
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Download a certified, shareable PDF summary of your peer exchanges, verified skills, and collaboration track record.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleExportPDF}
+                      className="px-3.5 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-400 text-obsidian-950 text-xs font-bold shadow-gold-subtle transition-all flex items-center gap-1.5"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Download Activity PDF
+                    </button>
+                  </div>
+
+                  {/* Option 2: Raw JSON Archive */}
                   <div className="p-4 rounded-xl border border-slate-200 dark:border-obsidian-800 bg-white dark:bg-obsidian-900 space-y-2">
                     <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100 font-semibold text-xs sm:text-sm">
-                      <Download className="w-4 h-4 text-gold-500" />
-                      Export Personal Data
+                      <Download className="w-4 h-4 text-slate-500" />
+                      Export Personal Data (JSON)
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                       Download a structured JSON archive of your skill profiles, peer endorsements, and account configuration.
@@ -658,6 +688,7 @@ export const SettingsPage: React.FC = () => {
                     </button>
                   </div>
 
+                  {/* Option 3: Account Deletion */}
                   <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-950/60 bg-rose-50/40 dark:bg-rose-950/20 space-y-2">
                     <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-semibold text-xs sm:text-sm">
                       <Trash2 className="w-4 h-4" />
