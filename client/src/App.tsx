@@ -12,8 +12,6 @@ import { ExchangesPage } from './pages/ExchangesPage';
 import { StudioPage } from './pages/StudioPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { ReviewsPage } from './pages/ReviewsPage';
-import { PrivacyCenterPage } from './pages/PrivacyCenterPage';
-import { SecurityCenterPage } from './pages/SecurityCenterPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MessagesPage } from './pages/MessagesPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -125,8 +123,20 @@ export const App: React.FC = () => {
         element={<Navigate to="/settings?tab=privacy" replace />}
       />
       <Route
+        path="/privacy-center"
+        element={<Navigate to="/settings?tab=privacy" replace />}
+      />
+      <Route
         path="/security"
         element={<Navigate to="/settings?tab=security" replace />}
+      />
+      <Route
+        path="/security-center"
+        element={<Navigate to="/settings?tab=security" replace />}
+      />
+      <Route
+        path="/appearance"
+        element={<Navigate to="/settings?tab=appearance" replace />}
       />
       <Route
         path="/messages"

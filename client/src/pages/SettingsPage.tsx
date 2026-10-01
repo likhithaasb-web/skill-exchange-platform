@@ -238,17 +238,17 @@ export const SettingsPage: React.FC = () => {
           <div className="pb-4 border-b border-slate-200 dark:border-obsidian-800">
             <span className="text-xs font-mono font-bold text-gold-500 uppercase tracking-widest flex items-center gap-1.5">
               <Sliders className="w-4 h-4" />
-              Platform Controls
+              Platform Settings
             </span>
             <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-slate-900 dark:text-slate-100 mt-1">
-              Settings & Privacy Center
+              Settings
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Configure your visual workspace, peer privacy boundaries, and account safety filters.
+              Manage your appearance, privacy center, and security center in one unified workspace.
             </p>
           </div>
 
-          {/* Navigation Tabs */}
+          {/* Navigation Tabs: Appearance, Privacy Center, Security Center */}
           <div className="flex border-b border-slate-200 dark:border-obsidian-800 gap-2 sm:gap-4 overflow-x-auto">
             <button
               onClick={() => {
@@ -262,7 +262,7 @@ export const SettingsPage: React.FC = () => {
               }`}
             >
               <Sun className="w-4 h-4" />
-              Theme & Appearance
+              Appearance
             </button>
 
             <button
@@ -292,7 +292,7 @@ export const SettingsPage: React.FC = () => {
               }`}
             >
               <Shield className="w-4 h-4" />
-              Security & Safety
+              Security Center
             </button>
           </div>
 

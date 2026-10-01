@@ -41,9 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { to: '/studio/active', label: 'Skill Studio', icon: MonitorPlay, highlight: true },
     { to: '/projects', label: 'Collaborative Projects', icon: FolderGit2 },
     { to: '/reviews', label: 'Peer Reviews', icon: Star },
-    { to: '/settings?tab=privacy', label: 'Privacy Center', icon: Shield },
-    { to: '/settings?tab=security', label: 'Security Center', icon: Lock },
-    { to: '/settings?tab=appearance', label: 'Appearance & UI', icon: Sliders },
+    { to: '/settings', label: 'Settings', icon: Sliders },
   ];
 
   return (

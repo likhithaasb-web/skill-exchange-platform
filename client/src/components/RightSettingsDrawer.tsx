@@ -176,18 +176,6 @@ export const RightSettingsDrawer: React.FC<RightSettingsDrawerProps> = ({ isOpen
           {/* Navigation Tabs */}
           <div className="flex border-b border-slate-200 dark:border-obsidian-800 bg-slate-100/50 dark:bg-obsidian-950/30 px-3 pt-2 gap-1">
             <button
-              onClick={() => setActiveTab('privacy')}
-              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-lg transition border-b-2 ${
-                activeTab === 'privacy'
-                  ? 'border-gold-500 text-gold-600 dark:text-gold-400 bg-white dark:bg-obsidian-900 font-semibold'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
-              }`}
-            >
-              <Eye className="w-3.5 h-3.5" />
-              Privacy & Visibility
-            </button>
-
-            <button
               onClick={() => setActiveTab('appearance')}
               className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-lg transition border-b-2 ${
                 activeTab === 'appearance'
@@ -196,7 +184,19 @@ export const RightSettingsDrawer: React.FC<RightSettingsDrawerProps> = ({ isOpen
               }`}
             >
               <Sun className="w-3.5 h-3.5" />
-              Theme & Style
+              Appearance
+            </button>
+
+            <button
+              onClick={() => setActiveTab('privacy')}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-lg transition border-b-2 ${
+                activeTab === 'privacy'
+                  ? 'border-gold-500 text-gold-600 dark:text-gold-400 bg-white dark:bg-obsidian-900 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              Privacy Center
             </button>
 
             <button
@@ -208,7 +208,7 @@ export const RightSettingsDrawer: React.FC<RightSettingsDrawerProps> = ({ isOpen
               }`}
             >
               <Shield className="w-3.5 h-3.5" />
-              Security
+              Security Center
             </button>
           </div>
 
@@ -604,11 +604,11 @@ export const RightSettingsDrawer: React.FC<RightSettingsDrawerProps> = ({ isOpen
               type="button"
               onClick={() => {
                 onClose();
-                navigate('/settings');
+                navigate(`/settings?tab=${activeTab}`);
               }}
               className="text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-gold-500 dark:hover:text-gold-400 flex items-center gap-1.5 transition"
             >
-              <span>Full Privacy & Security Center</span>
+              <span>Open Full Settings</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </button>
 
