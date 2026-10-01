@@ -92,17 +92,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-all relative ${
                       isActive
-                        ? 'bg-gold-500/15 text-slate-900 dark:text-white font-semibold border border-gold-500/30 shadow-inner-glass'
-                        : 'text-slate-700 dark:text-white hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/[0.08] font-medium'
+                        ? 'bg-slate-900/10 dark:bg-white/[0.12] text-slate-900 dark:text-white font-semibold border border-slate-300/80 dark:border-white/20 shadow-inner-glass'
+                        : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100/80 dark:text-white/80 dark:hover:text-white dark:hover:bg-white/[0.08] font-medium'
                     }`
                   }
                 >
                   {({ isActive }) => (
                     <>
-                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-gold-400' : 'text-slate-500 dark:text-slate-300'}`} />
+                      <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-slate-900 dark:text-white opacity-100' : 'text-slate-600 dark:text-white opacity-70 group-hover:opacity-100'}`} />
                       <span className="text-slate-900 dark:text-white font-medium">{item.label}</span>
                       {isActive && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-gold-500 shadow-[0_0_8px_rgba(234,179,8,0.5)] ml-auto shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] ml-auto shrink-0" />
                       )}
                     </>
                   )}
@@ -123,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               >
                 <UserAvatar avatar={user.avatar} size="sm" showGoldBorder />
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-gold-500 transition-colors truncate">
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors truncate">
                     {user.displayName}
                   </p>
                   <p className="text-[11px] text-slate-400 font-mono truncate">
