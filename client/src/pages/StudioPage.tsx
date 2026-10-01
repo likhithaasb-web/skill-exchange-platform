@@ -25,6 +25,8 @@ import { VoiceVideoPanel } from '../components/studio/VoiceVideoPanel';
 import { ResourcesPanel } from '../components/studio/ResourcesPanel';
 import { StudioChat } from '../components/studio/StudioChat';
 import { SessionSettingsModal } from '../components/studio/SessionSettingsModal';
+import { LeaveConfirmationModal } from '../components/studio/LeaveConfirmationModal';
+import { SessionEndedModal } from '../components/studio/SessionEndedModal';
 import { UserAvatar } from '../components/UserAvatar';
 import { api } from '../services/api';
 import { SkillStudio } from '../types';
@@ -39,6 +41,9 @@ export const StudioPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'whiteboard' | 'code'>('whiteboard');
   const [sidePanel, setSidePanel] = useState<'voice' | 'resources' | 'chat'>('voice');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [isEndingSession, setIsEndingSession] = useState(false);
+  const [sessionEndedInfo, setSessionEndedInfo] = useState<{ endedBy: string; reason: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,6 +78,10 @@ export const StudioPage: React.FC = () => {
 
         // Join Socket room
         if (socket && user) {
+          const userIsHost = res.studio.participants.some(
+            (p: any) => p.role === 'host' && (p.userId?._id || p.userId) === user._id
+          );
+
           socket.emit('join-studio', {
             studioId: res.studio._id,
             user: {
@@ -81,6 +90,7 @@ export const StudioPage: React.FC = () => {
               displayName: user.displayName,
               avatar: user.avatar,
             },
+            isHost: userIsHost,
           });
         }
       }
@@ -90,6 +100,36 @@ export const StudioPage: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  // Socket listener for when instructor ends or leaves the meeting
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSessionEnded = (data: { endedBy?: string; reason?: string }) => {
+      setSessionEndedInfo({
+        endedBy: data?.endedBy || 'The instructor',
+        reason: data?.reason || 'The instructor has left the meeting. This session has now ended completely.',
+      });
+    };
+
+    socket.on('studio-session-ended', handleSessionEnded);
+
+    return () => {
+      socket.off('studio-session-ended', handleSessionEnded);
+    };
+  }, [socket]);
+
+  // Warn before browser tab closure or refresh during active studio
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (studio && studio.status !== 'ended') {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [studio]);
 
   const handleSaveWhiteboard = async (elements: any[]) => {
     if (!studio) return;
@@ -109,7 +149,36 @@ export const StudioPage: React.FC = () => {
     }
   };
 
-  const handleLeave = () => {
+  const handleLeaveClick = () => {
+    setIsLeaveModalOpen(true);
+  };
+
+  const handleConfirmLeave = () => {
+    if (socket && studio) {
+      socket.emit('leave-studio', { studioId: studio._id, isHost: false });
+    }
+    setIsLeaveModalOpen(false);
+    navigate('/dashboard');
+  };
+
+  const handleConfirmEndSession = async () => {
+    if (!studio) return;
+    setIsEndingSession(true);
+    try {
+      await api.endStudioSession(studio._id);
+    } catch (err) {
+      console.warn('API endStudioSession error:', err);
+    }
+
+    if (socket) {
+      socket.emit('end-studio-session', {
+        studioId: studio._id,
+        endedBy: user?.displayName || user?.username || 'The Instructor',
+      });
+    }
+
+    setIsEndingSession(false);
+    setIsLeaveModalOpen(false);
     navigate('/dashboard');
   };
 
@@ -150,6 +219,40 @@ export const StudioPage: React.FC = () => {
     );
   }
 
+  // If studio is already marked ended in DB and no active session-ended modal
+  if (studio && studio.status === 'ended' && !sessionEndedInfo) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-obsidian-950 flex flex-col items-center justify-center p-6 text-center text-slate-900 dark:text-slate-100 ambient-canvas">
+        <div className="w-16 h-16 rounded-2xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-500 mb-4 shadow-gold-subtle">
+          <PhoneOff className="w-8 h-8 text-gold-500" />
+        </div>
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 mb-2">
+          Meeting Concluded
+        </span>
+        <h2 className="text-xl font-bold font-display text-slate-900 dark:text-white mb-2">
+          {studio.title}
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
+          This Skill Studio session has ended completely. The instructor has concluded the meeting.
+        </p>
+        <div className="flex gap-3">
+          <Link
+            to="/exchanges"
+            className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-white/5 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-300 dark:border-white/10 hover:bg-slate-300 dark:hover:bg-white/10"
+          >
+            View Skill Exchanges
+          </Link>
+          <Link
+            to="/dashboard"
+            className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs shadow-gold-subtle"
+          >
+            Return to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const isHost = studio.participants.some(
     (p) => p.role === 'host' && (p.userId?._id || p.userId) === user?._id
   );
@@ -164,13 +267,13 @@ export const StudioPage: React.FC = () => {
       <header className="h-14 bg-white dark:bg-obsidian-900 border-b border-slate-200 dark:border-white/10 px-4 sm:px-6 flex items-center justify-between gap-4 shrink-0 z-30 shadow-sm">
         {/* Left: Studio Identity */}
         <div className="flex items-center gap-3">
-          <Link
-            to="/dashboard"
-            className="w-7 h-7 rounded-lg bg-gradient-to-tr from-gold-600 to-amber-300 flex items-center justify-center shadow-gold-subtle"
+          <button
+            onClick={handleLeaveClick}
+            className="w-7 h-7 rounded-lg bg-gradient-to-tr from-gold-600 to-amber-300 flex items-center justify-center shadow-gold-subtle cursor-pointer hover:scale-105 transition-transform"
             title="Return to SkillX Dashboard"
           >
             <span className="font-display font-black text-obsidian-950 text-sm">X</span>
-          </Link>
+          </button>
 
           <div>
             <div className="flex items-center gap-2">
@@ -226,7 +329,7 @@ export const StudioPage: React.FC = () => {
 
           {/* Leave Button */}
           <button
-            onClick={handleLeave}
+            onClick={handleLeaveClick}
             className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30 text-xs font-semibold transition-colors flex items-center gap-1.5"
             title="Leave Studio"
           >
@@ -328,7 +431,7 @@ export const StudioPage: React.FC = () => {
                 studioId={studio._id}
                 currentUser={user!}
                 participants={studio.participants}
-                onLeaveStudio={handleLeave}
+                onLeaveStudio={handleLeaveClick}
                 cameraAllowed={studio.sessionSettings?.cameraAllowed}
                 voiceAllowed={studio.sessionSettings?.voiceAllowed}
               />
@@ -360,6 +463,24 @@ export const StudioPage: React.FC = () => {
         studioId={studio._id}
         initialSettings={studio.sessionSettings}
         isHost={isHost}
+      />
+
+      {/* Leave Alert Confirmation Modal */}
+      <LeaveConfirmationModal
+        isOpen={isLeaveModalOpen}
+        onClose={() => setIsLeaveModalOpen(false)}
+        onConfirmLeave={handleConfirmLeave}
+        onConfirmEndSession={handleConfirmEndSession}
+        isHost={isHost}
+        isEnding={isEndingSession}
+      />
+
+      {/* Session Ended by Instructor Modal */}
+      <SessionEndedModal
+        isOpen={Boolean(sessionEndedInfo)}
+        endedBy={sessionEndedInfo?.endedBy}
+        reason={sessionEndedInfo?.reason}
+        onReturnDashboard={() => navigate('/dashboard')}
       />
     </div>
   );

@@ -44,7 +44,7 @@ function setupStudioSockets(io) {
     });
 
     // Studio Join
-    socket.on('join-studio', async ({ studioId, user }) => {
+    socket.on('join-studio', async ({ studioId, user, isHost }) => {
       try {
         currentStudioId = studioId;
         currentUser = user;
@@ -55,6 +55,22 @@ function setupStudioSockets(io) {
           studioRooms.set(studioId, new Map());
         }
 
+        let userIsHost = Boolean(isHost);
+        try {
+          const studioDoc = await SkillStudio.findById(studioId);
+          if (studioDoc) {
+            const hostP = studioDoc.participants.find((p) => p.role === 'host');
+            const uid = (user.id || user._id || '').toString();
+            if (hostP && (hostP.userId?._id || hostP.userId).toString() === uid) {
+              userIsHost = true;
+            }
+          }
+        } catch (err) {
+          console.error('Error verifying host in join-studio:', err);
+        }
+
+        socket.isHost = userIsHost;
+
         const roomUsers = studioRooms.get(studioId);
         roomUsers.set(socket.id, {
           socketId: socket.id,
@@ -62,6 +78,7 @@ function setupStudioSockets(io) {
           username: user.username,
           displayName: user.displayName,
           avatar: user.avatar,
+          isHost: userIsHost,
           isSpeaking: false,
           cursor: { x: 0, y: 0 }
         });
@@ -178,8 +195,78 @@ function setupStudioSockets(io) {
       io.to(`studio:${studioId}`).emit('session-settings-changed', settings);
     });
 
+    // Explicit studio leave
+    socket.on('leave-studio', async ({ studioId, isHost }) => {
+      const targetStudioId = studioId || currentStudioId;
+      if (!targetStudioId) return;
+
+      const teachingPersonLeft = Boolean(isHost || socket.isHost);
+
+      if (teachingPersonLeft) {
+        // When teaching person leaves the meeting, end it completely for everyone!
+        try {
+          await SkillStudio.findByIdAndUpdate(targetStudioId, {
+            status: 'ended',
+            endedAt: new Date()
+          });
+
+          io.to(`studio:${targetStudioId}`).emit('studio-session-ended', {
+            studioId: targetStudioId,
+            endedBy: currentUser?.displayName || currentUser?.username || 'The Instructor',
+            reason: 'The instructor has left the meeting. This session has now ended completely.'
+          });
+
+          if (studioRooms.has(targetStudioId)) {
+            studioRooms.delete(targetStudioId);
+          }
+        } catch (err) {
+          console.error('Error on host leave-studio:', err);
+        }
+      } else {
+        // Regular participant left
+        if (studioRooms.has(targetStudioId)) {
+          const room = studioRooms.get(targetStudioId);
+          room.delete(socket.id);
+          const participants = Array.from(room.values());
+          io.to(`studio:${targetStudioId}`).emit('studio-participants-update', participants);
+        }
+
+        if (currentUser) {
+          socket.to(`studio:${targetStudioId}`).emit('user-left-studio', {
+            username: currentUser.username,
+            displayName: currentUser.displayName
+          });
+        }
+      }
+    });
+
+    // Explicit end studio session (triggered by host)
+    socket.on('end-studio-session', async ({ studioId, endedBy }) => {
+      const targetStudioId = studioId || currentStudioId;
+      if (!targetStudioId) return;
+
+      try {
+        await SkillStudio.findByIdAndUpdate(targetStudioId, {
+          status: 'ended',
+          endedAt: new Date()
+        });
+
+        io.to(`studio:${targetStudioId}`).emit('studio-session-ended', {
+          studioId: targetStudioId,
+          endedBy: endedBy || currentUser?.displayName || currentUser?.username || 'The Instructor',
+          reason: 'The instructor has ended this session.'
+        });
+
+        if (studioRooms.has(targetStudioId)) {
+          studioRooms.delete(targetStudioId);
+        }
+      } catch (err) {
+        console.error('Error on end-studio-session:', err);
+      }
+    });
+
     // Disconnect cleanup
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       if (currentUser && currentUser._id) {
         onlineUsers.delete(currentUser._id.toString());
         io.emit('online-users-list', Array.from(onlineUsers.keys()));
@@ -187,20 +274,42 @@ function setupStudioSockets(io) {
 
       if (currentStudioId && studioRooms.has(currentStudioId)) {
         const room = studioRooms.get(currentStudioId);
+        const exitingUser = room.get(socket.id);
+        const wasHost = exitingUser?.isHost || socket.isHost;
         room.delete(socket.id);
 
-        const participants = Array.from(room.values());
-        io.to(`studio:${currentStudioId}`).emit('studio-participants-update', participants);
+        if (wasHost) {
+          // The teaching person disconnected! End the session completely for everyone!
+          try {
+            await SkillStudio.findByIdAndUpdate(currentStudioId, {
+              status: 'ended',
+              endedAt: new Date()
+            });
 
-        if (currentUser) {
-          socket.to(`studio:${currentStudioId}`).emit('user-left-studio', {
-            username: currentUser.username,
-            displayName: currentUser.displayName
-          });
-        }
+            io.to(`studio:${currentStudioId}`).emit('studio-session-ended', {
+              studioId: currentStudioId,
+              endedBy: currentUser?.displayName || currentUser?.username || 'The Instructor',
+              reason: 'The instructor has left the meeting. This session has now ended completely.'
+            });
 
-        if (room.size === 0) {
-          studioRooms.delete(currentStudioId);
+            studioRooms.delete(currentStudioId);
+          } catch (err) {
+            console.error('Error ending studio on host disconnect:', err);
+          }
+        } else {
+          const participants = Array.from(room.values());
+          io.to(`studio:${currentStudioId}`).emit('studio-participants-update', participants);
+
+          if (currentUser) {
+            socket.to(`studio:${currentStudioId}`).emit('user-left-studio', {
+              username: currentUser.username,
+              displayName: currentUser.displayName
+            });
+          }
+
+          if (room.size === 0) {
+            studioRooms.delete(currentStudioId);
+          }
         }
       }
     });

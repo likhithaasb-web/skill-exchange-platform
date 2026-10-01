@@ -179,6 +179,7 @@ export interface SkillStudio {
     lastEditedBy?: string;
   };
   chatMessages: ChatMessage[];
+  endedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
