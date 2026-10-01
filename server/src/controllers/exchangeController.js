@@ -86,13 +86,33 @@ exports.discoverPeers = async (req, res, next) => {
 
     const allCandidates = [...peers];
 
-    // Apply search filter if provided
+    // Apply search filter if provided (supports skill, username, and display name)
     if (skill) {
       const queryLower = skill.toLowerCase().trim();
+      const strippedQuery = queryLower.replace(/^@/, '');
       peers = peers.filter(item => {
-        const teachesMatch = item.profile.skillsTeaching.some(s => s.name.toLowerCase().includes(queryLower));
-        const learnsMatch = item.profile.skillsLearning.some(s => s.name.toLowerCase().includes(queryLower));
-        return teachesMatch || learnsMatch;
+        const usernameLower = (item.user.username || '').toLowerCase();
+        const displayNameLower = (item.user.displayName || '').toLowerCase();
+
+        // Match username with or without @
+        const usernameMatch = usernameLower.includes(queryLower) ||
+                              usernameLower.replace(/^@/, '').includes(strippedQuery) ||
+                              (strippedQuery && usernameLower.includes(strippedQuery));
+
+        // Match display name
+        const displayNameMatch = displayNameLower.includes(queryLower) || displayNameLower.includes(strippedQuery);
+
+        // Match teaching skills
+        const teachesMatch = item.profile.skillsTeaching.some(s =>
+          s.name.toLowerCase().includes(queryLower) || s.name.toLowerCase().includes(strippedQuery)
+        );
+
+        // Match learning skills
+        const learnsMatch = item.profile.skillsLearning.some(s =>
+          s.name.toLowerCase().includes(queryLower) || s.name.toLowerCase().includes(strippedQuery)
+        );
+
+        return usernameMatch || displayNameMatch || teachesMatch || learnsMatch;
       });
     }
 

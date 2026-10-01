@@ -37,26 +37,36 @@ exports.checkUsername = async (req, res, next) => {
 
     const username = rawUsername.trim().toLowerCase();
 
-    // Check length
-    if (username.length < 4 || username.length > 20) {
+    // Condition: Must start with @
+    if (!username.startsWith('@')) {
       return res.json({
         success: true,
         available: false,
-        reason: 'Username must be between 4 and 20 characters.'
+        reason: 'Username must start with @ (e.g. @developer).'
       });
     }
 
-    // Check characters
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    // Check length (4 to 21 characters total, e.g. @dev to @long_username)
+    if (username.length < 4 || username.length > 21) {
       return res.json({
         success: true,
         available: false,
-        reason: 'Only letters, numbers, and underscores are allowed (no spaces or special symbols).'
+        reason: 'Username must be between 4 and 21 characters (including @).'
+      });
+    }
+
+    // Check characters: starts with @, letters, numbers, underscores only
+    if (!/^@[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      return res.json({
+        success: true,
+        available: false,
+        reason: 'Letters, numbers, and underscores only after @ (no spaces or special symbols).'
       });
     }
 
     // Check reserved names
-    if (isUsernameReserved(username)) {
+    const baseName = username.slice(1);
+    if (isUsernameReserved(baseName) || isUsernameReserved(username)) {
       return res.json({
         success: true,
         available: false,
@@ -64,20 +74,25 @@ exports.checkUsername = async (req, res, next) => {
       });
     }
 
-    // Check database
-    const existing = await User.findOne({ username });
+    // Condition: Usernames must NOT repeat (strict uniqueness check)
+    const existing = await User.findOne({
+      $or: [
+        { username },
+        { username: baseName }
+      ]
+    });
     if (existing) {
       return res.json({
         success: true,
         available: false,
-        reason: 'Username is already taken by another member.'
+        reason: 'Username is already taken by another member. Usernames cannot repeat.'
       });
     }
 
     return res.json({
       success: true,
       available: true,
-      message: `${username} is available.`
+      message: `${username} is available!`
     });
   } catch (err) {
     next(err);
@@ -95,18 +110,23 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    const cleanUsername = username.trim().toLowerCase();
+    let cleanUsername = username.trim().toLowerCase();
+    if (!cleanUsername.startsWith('@')) {
+      cleanUsername = '@' + cleanUsername;
+    }
+
     const finalDisplayName = (displayName && displayName.trim()) || cleanUsername;
 
-    // Validate username
-    if (cleanUsername.length < 4 || cleanUsername.length > 20 || !/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
+    // Validate username condition: starts with @, 4-21 chars, letters/numbers/underscores
+    if (cleanUsername.length < 4 || cleanUsername.length > 21 || !/^@[a-zA-Z0-9_]{3,20}$/.test(cleanUsername)) {
       return res.status(400).json({
         success: false,
-        message: 'Username must be 4–20 characters and contain only letters, numbers, and underscores.'
+        message: 'Username must start with @ and be 4–21 characters containing only letters, numbers, and underscores.'
       });
     }
 
-    if (isUsernameReserved(cleanUsername)) {
+    const baseName = cleanUsername.slice(1);
+    if (isUsernameReserved(baseName) || isUsernameReserved(cleanUsername)) {
       return res.status(400).json({
         success: false,
         message: 'This username is reserved by the platform.'
@@ -122,16 +142,22 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    // Check existing
+    // Condition: Usernames must NOT repeat (strict database uniqueness)
     const existingUser = await User.findOne({
-      $or: [{ username: cleanUsername }, { email: email.trim().toLowerCase() }]
+      $or: [
+        { username: cleanUsername },
+        { username: baseName },
+        { email: email.trim().toLowerCase() }
+      ]
     });
 
     if (existingUser) {
-      const field = existingUser.username === cleanUsername ? 'Username' : 'Email';
+      const isUsernameTaken = existingUser.username === cleanUsername || existingUser.username === baseName;
       return res.status(400).json({
         success: false,
-        message: `${field} is already registered.`
+        message: isUsernameTaken
+          ? `Username ${cleanUsername} is already registered. Usernames cannot repeat across members.`
+          : 'Email is already registered.'
       });
     }
 
@@ -212,8 +238,16 @@ exports.login = async (req, res, next) => {
     }
 
     const cleanIdentifier = identifier.trim().toLowerCase();
+    const withAt = cleanIdentifier.startsWith('@') ? cleanIdentifier : '@' + cleanIdentifier;
+    const withoutAt = cleanIdentifier.replace(/^@/, '');
+
     const user = await User.findOne({
-      $or: [{ username: cleanIdentifier }, { email: cleanIdentifier }]
+      $or: [
+        { username: cleanIdentifier },
+        { username: withAt },
+        { username: withoutAt },
+        { email: cleanIdentifier }
+      ]
     });
 
     if (!user) {

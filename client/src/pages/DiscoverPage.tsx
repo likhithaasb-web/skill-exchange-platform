@@ -284,7 +284,7 @@ export const DiscoverPage: React.FC = () => {
                   <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search skills (e.g. Python, Cybersecurity, React, Figma, Linux, Docker)..."
+                    placeholder="Search by username (@username) or skills (e.g. Python, Cybersecurity, React)..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-gold-500 shadow-sm"

@@ -7,8 +7,16 @@ exports.getProfileByUsername = async (req, res, next) => {
   try {
     const { username } = req.params;
     const cleanUsername = username.toLowerCase().trim();
+    const withAt = cleanUsername.startsWith('@') ? cleanUsername : '@' + cleanUsername;
+    const withoutAt = cleanUsername.replace(/^@/, '');
 
-    const user = await User.findOne({ username: cleanUsername }).select('-passwordHash');
+    const user = await User.findOne({
+      $or: [
+        { username: cleanUsername },
+        { username: withAt },
+        { username: withoutAt }
+      ]
+    }).select('-passwordHash');
     if (!user) {
       return res.status(404).json({ success: false, message: 'User profile not found.' });
     }

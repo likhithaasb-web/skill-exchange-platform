@@ -33,20 +33,31 @@ export const RegisterPage: React.FC = () => {
     }
 
     const clean = username.trim().toLowerCase();
-    if (clean.length < 4 || clean.length > 20) {
+
+    // Condition 1: Must start with @
+    if (!clean.startsWith('@')) {
       setUsernameStatus({
         checking: false,
         available: false,
-        message: 'Must be 4–20 characters',
+        message: 'Username must start with @ (e.g. @developer)',
       });
       return;
     }
 
-    if (!/^[a-zA-Z0-9_]+$/.test(clean)) {
+    if (clean.length < 4 || clean.length > 21) {
       setUsernameStatus({
         checking: false,
         available: false,
-        message: 'Letters, numbers & underscores only (no spaces)',
+        message: 'Must be 4–21 characters (including @)',
+      });
+      return;
+    }
+
+    if (!/^@[a-zA-Z0-9_]{3,20}$/.test(clean)) {
+      setUsernameStatus({
+        checking: false,
+        available: false,
+        message: 'Letters, numbers & underscores only after @ (no spaces)',
       });
       return;
     }
@@ -65,7 +76,7 @@ export const RegisterPage: React.FC = () => {
           setUsernameStatus({
             checking: false,
             available: false,
-            message: res.reason || 'Username is not available',
+            message: res.reason || 'Username is already taken. Usernames cannot repeat.',
           });
         }
       } catch (err) {
@@ -80,8 +91,18 @@ export const RegisterPage: React.FC = () => {
     e.preventDefault();
     if (!username.trim() || !email.trim() || !password) return;
 
+    let clean = username.trim().toLowerCase();
+    if (!clean.startsWith('@')) {
+      clean = '@' + clean;
+    }
+
+    if (!clean.startsWith('@') || clean.length < 4 || clean.length > 21 || !/^@[a-zA-Z0-9_]{3,20}$/.test(clean)) {
+      setError('Username must start with @ and be 4–21 characters (letters, numbers, and underscores).');
+      return;
+    }
+
     if (!usernameStatus.available) {
-      setError('Please choose a valid and available username.');
+      setError('Please choose a valid and available username. Usernames cannot repeat across members.');
       return;
     }
 
@@ -95,7 +116,6 @@ export const RegisterPage: React.FC = () => {
     setError(null);
 
     try {
-      const clean = username.trim().toLowerCase();
       await register({
         username: clean,
         email: email.trim().toLowerCase(),
@@ -142,10 +162,10 @@ export const RegisterPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Username
+                  Username <span className="text-gold-600 dark:text-gold-400 font-bold">(Must start with @)</span>
                 </label>
                 {usernameStatus.checking && (
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 animate-pulse">Checking availability...</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 animate-pulse">Checking uniqueness...</span>
                 )}
                 {!usernameStatus.checking && usernameStatus.available === true && (
                   <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
@@ -160,9 +180,15 @@ export const RegisterPage: React.FC = () => {
               </div>
               <input
                 type="text"
-                placeholder="e.g. harsha_dev"
+                placeholder="@your_username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => {
+                  let val = e.target.value;
+                  if (val && !val.startsWith('@')) {
+                    val = '@' + val;
+                  }
+                  setUsername(val);
+                }}
                 className={`w-full bg-slate-50 dark:bg-obsidian-950 border rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none transition-colors ${
                   usernameStatus.available === true
                     ? 'border-emerald-500/60 focus:border-emerald-500'
@@ -172,9 +198,10 @@ export const RegisterPage: React.FC = () => {
                 }`}
                 required
               />
-              <p className="text-[10px] text-slate-500 mt-1">
-                4–20 characters. Letters, numbers, and underscores only.
-              </p>
+              <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+                <span>Must start with @. 4–21 characters. Letters, numbers & underscores.</span>
+                <span className="font-semibold text-gold-600 dark:text-gold-400">Unique (cannot repeat)</span>
+              </div>
             </div>
 
             {/* Email */}

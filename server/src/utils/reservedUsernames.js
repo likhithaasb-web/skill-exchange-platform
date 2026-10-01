@@ -33,7 +33,8 @@ const RESERVED_USERNAMES = new Set([
 
 function isUsernameReserved(username) {
   if (!username) return true;
-  return RESERVED_USERNAMES.has(username.toLowerCase().trim());
+  const clean = username.toLowerCase().trim().replace(/^@/, '');
+  return RESERVED_USERNAMES.has(clean);
 }
 
 module.exports = {
