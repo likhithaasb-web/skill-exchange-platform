@@ -13,7 +13,9 @@ import {
   ExternalLink,
   ShieldCheck,
   Bell,
-  MessageSquare
+  MessageSquare,
+  BookOpen,
+  Star
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
@@ -93,18 +95,69 @@ export const DashboardPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsSkillEditorOpen(true)}
-                className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-obsidian-950 text-xs font-bold shadow-gold-subtle transition-all flex items-center gap-1.5"
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 text-obsidian-950 text-xs font-semibold shadow-gold-satin transition-all active:scale-[0.98] flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
                 Add Skills / Goals
               </button>
               <Link
                 to="/discover"
-                className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-800 dark:text-white text-xs font-semibold border border-slate-300 dark:border-white/10 transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 rounded-full bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-800 dark:text-white text-xs font-medium border border-slate-200/80 dark:border-white/[0.08] transition-all flex items-center gap-1.5"
               >
                 <Compass className="w-4 h-4" />
                 Discover Peers
               </Link>
+            </div>
+          </div>
+
+          {/* Executive KPI Metrics Strip */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="satin-card p-4 rounded-2xl flex items-center justify-between border border-slate-200/80 dark:border-white/[0.08]">
+              <div>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Active Exchanges</span>
+                <span className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white mt-0.5 block">
+                  {activeExchanges.length}
+                </span>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-gold-500">
+                <ArrowRightLeft className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="satin-card p-4 rounded-2xl flex items-center justify-between border border-slate-200/80 dark:border-white/[0.08]">
+              <div>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Skills Teaching</span>
+                <span className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white mt-0.5 block">
+                  {profile?.skillsTeaching?.length || 0}
+                </span>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                <Award className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="satin-card p-4 rounded-2xl flex items-center justify-between border border-slate-200/80 dark:border-white/[0.08]">
+              <div>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Skills Learning</span>
+                <span className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white mt-0.5 block">
+                  {profile?.skillsLearning?.length || 0}
+                </span>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-500">
+                <BookOpen className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="satin-card p-4 rounded-2xl flex items-center justify-between border border-slate-200/80 dark:border-white/[0.08]">
+              <div>
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">Peer Endorsements</span>
+                <span className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white mt-0.5 block">
+                  {profile?.stats?.reviewsCount || profile?.endorsements?.length || 0}
+                </span>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                <Star className="w-4 h-4" />
+              </div>
             </div>
           </div>
 
@@ -137,15 +190,15 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             {activeExchanges.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-white dark:bg-obsidian-900/50 border border-slate-200 dark:border-white/10 text-center space-y-3 shadow-sm">
-                <ArrowRightLeft className="w-10 h-10 text-slate-400 mx-auto opacity-50" />
+              <div className="satin-card p-8 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] text-center space-y-3 shadow-sm">
+                <ArrowRightLeft className="w-9 h-9 text-slate-400 mx-auto opacity-40" />
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">No active exchanges yet</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                   Your first skill exchange could start here. Connect with peers who want what you teach!
                 </p>
                 <Link
                   to="/discover"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold-500 text-obsidian-950 font-bold text-xs shadow-gold-subtle"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 text-obsidian-950 font-semibold text-xs shadow-gold-satin transition-all"
                 >
                   Discover Compatible Learners
                 </Link>
@@ -161,21 +214,21 @@ export const DashboardPage: React.FC = () => {
                   return (
                     <div
                       key={ex._id}
-                      className="p-5 rounded-2xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-gold-500/20 hover:border-gold-500/40 transition-all flex flex-col justify-between shadow-sm"
+                      className="satin-card p-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] hover:border-gold-500/40 transition-all flex flex-col justify-between"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <UserAvatar avatar={partner?.avatar} size="md" showGoldBorder />
                           <div>
-                            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                            <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
                               {partner?.displayName || 'Peer'}
                             </h4>
-                            <span className="text-xs text-gold-600 dark:text-gold-400">@{partner?.username}</span>
+                            <span className="text-xs text-gold-600 dark:text-gold-400 font-mono">@{partner?.username}</span>
                           </div>
                         </div>
 
                         <span
-                          className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded font-semibold ${
+                          className={`text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full font-semibold ${
                             ex.status === 'accepted'
                               ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
                               : ex.status === 'pending'
@@ -188,25 +241,25 @@ export const DashboardPage: React.FC = () => {
                       </div>
 
                       {/* Skill Pair Transfer */}
-                      <div className="my-4 p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 flex items-center justify-between text-xs">
+                      <div className="my-4 p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/[0.06] flex items-center justify-between text-xs">
                         <div>
-                          <span className="text-[10px] text-slate-500 uppercase block">You Teach</span>
+                          <span className="text-[10px] text-slate-400 uppercase block font-mono">You Teach</span>
                           <span className="font-semibold text-emerald-600 dark:text-emerald-400">{teachSkill}</span>
                         </div>
-                        <div className="text-gold-500 font-bold px-2">⇄</div>
+                        <div className="text-gold-500 font-bold px-2 text-sm">⇄</div>
                         <div>
-                          <span className="text-[10px] text-slate-500 uppercase block">They Teach</span>
+                          <span className="text-[10px] text-slate-400 uppercase block font-mono">They Teach</span>
                           <span className="font-semibold text-cyan-600 dark:text-cyan-400">{learnSkill}</span>
                         </div>
                       </div>
 
                       {/* Action Button */}
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5">
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/[0.06]">
                         <span className="text-[11px] text-slate-400">Format: {ex.preferredFormat}</span>
                         {ex.studioId ? (
                           <Link
                             to={`/studio/${ex.studioId._id || ex.studioId}`}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs shadow-gold-subtle transition-all hover:scale-105"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 text-obsidian-950 font-bold text-xs shadow-gold-satin transition-all active:scale-[0.98]"
                           >
                             <MonitorPlay className="w-3.5 h-3.5" />
                             Enter Skill Studio
@@ -214,7 +267,7 @@ export const DashboardPage: React.FC = () => {
                         ) : (
                           <Link
                             to="/exchanges"
-                            className="text-xs text-gold-600 dark:text-gold-400 hover:underline"
+                            className="text-xs text-gold-600 dark:text-gold-400 hover:underline font-medium"
                           >
                             Manage Request →
                           </Link>
@@ -251,7 +304,7 @@ export const DashboardPage: React.FC = () => {
               {suggestedPeers.map((peer) => (
                 <div
                   key={peer.user._id}
-                  className="p-5 rounded-2xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 hover:border-gold-500/40 shadow-sm transition-all flex flex-col justify-between"
+                  className="satin-card p-5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] hover:border-gold-500/40 shadow-sm transition-all flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between">
@@ -260,28 +313,28 @@ export const DashboardPage: React.FC = () => {
                         <div>
                           <Link
                             to={`/profile/${peer.user.username}`}
-                            className="text-sm font-bold text-slate-900 dark:text-white hover:text-gold-500 transition-colors"
+                            className="text-sm font-semibold text-slate-900 dark:text-white hover:text-gold-500 transition-colors"
                           >
                             {peer.user.displayName}
                           </Link>
-                          <span className="text-xs text-slate-400 block">@{peer.user.username}</span>
+                          <span className="text-xs text-slate-400 font-mono block">@{peer.user.username}</span>
                         </div>
                       </div>
 
                       {peer.matchInfo.isMutualMatch ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gold-500/15 text-gold-600 dark:text-gold-400 border border-gold-500/30">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gold-500/15 text-gold-600 dark:text-gold-400 border border-gold-500/30">
                           {peer.matchInfo.compatibilityScore}% Mutual Match
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400">
                           Complementary
                         </span>
                       )}
                     </div>
 
                     {/* Transparent Why You Match Checklist */}
-                    <div className="my-3 p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 space-y-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                    <div className="my-3 p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/[0.06] space-y-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1 font-mono">
                         Why You Match:
                       </span>
                       {peer.matchInfo.whyMatch?.length > 0 ? (
@@ -299,7 +352,7 @@ export const DashboardPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5 mt-2">
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/[0.06] mt-2">
                     <Link
                       to={`/profile/${peer.user.username}`}
                       className="text-xs text-slate-500 dark:text-slate-400 hover:text-gold-500 transition-colors"
@@ -309,7 +362,7 @@ export const DashboardPage: React.FC = () => {
                     <div className="flex items-center gap-1.5">
                       <Link
                         to={`/messages?userId=${peer.user._id}`}
-                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:border-gold-500/40 bg-slate-50 dark:bg-white/5 hover:bg-gold-500/10 text-slate-700 dark:text-slate-200 hover:text-gold-600 dark:hover:text-gold-400 font-semibold text-xs transition-all flex items-center gap-1"
+                        className="px-2.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-white/10 hover:border-gold-500/40 bg-slate-50 dark:bg-white/5 hover:bg-gold-500/10 text-slate-700 dark:text-slate-200 hover:text-gold-600 dark:hover:text-gold-400 font-semibold text-xs transition-all flex items-center gap-1"
                         title="Direct message this user"
                       >
                         <MessageSquare className="w-3 h-3 text-gold-500" />
@@ -317,7 +370,7 @@ export const DashboardPage: React.FC = () => {
                       </Link>
                       <button
                         onClick={() => setSelectedProposalPeer(peer)}
-                        className="px-3 py-1.5 rounded-lg bg-gold-500/15 hover:bg-gold-500 text-gold-600 dark:text-gold-400 hover:text-obsidian-950 font-bold text-xs border border-gold-500/30 transition-all flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-xl bg-gold-500/15 hover:bg-gold-500 text-gold-600 dark:text-gold-400 hover:text-obsidian-950 font-bold text-xs border border-gold-500/30 transition-all flex items-center gap-1"
                       >
                         <Send className="w-3 h-3" />
                         Propose
@@ -336,7 +389,7 @@ export const DashboardPage: React.FC = () => {
               Recent Platform Activity
             </h2>
 
-            <div className="p-4 rounded-2xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 shadow-sm divide-y divide-slate-100 dark:divide-white/5">
+            <div className="satin-card p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-sm divide-y divide-slate-100 dark:divide-white/[0.04]">
               {recentNotifications.length === 0 ? (
                 <p className="text-xs text-slate-400 py-3 text-center">No recent activity.</p>
               ) : (

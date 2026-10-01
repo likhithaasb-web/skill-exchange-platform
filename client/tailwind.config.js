@@ -44,12 +44,16 @@ export default {
       boxShadow: {
         'gold-glow': '0 0 25px -5px rgba(212, 175, 55, 0.35)',
         'gold-subtle': '0 4px 20px -2px rgba(212, 175, 55, 0.15)',
+        'gold-satin': '0 2px 10px -1px rgba(212, 175, 55, 0.25), 0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         'card-dark': '0 10px 30px -10px rgba(0, 0, 0, 0.7)',
-        'card-light': '0 10px 30px -10px rgba(0, 0, 0, 0.08)'
+        'card-light': '0 10px 30px -10px rgba(0, 0, 0, 0.06)',
+        'inner-glass': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.08)',
+        'inner-glass-light': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.8)',
       },
       backgroundImage: {
-        'passport-gradient': 'linear-gradient(135deg, #0D1117 0%, #161B26 50%, #090C12 100%)',
-        'gold-shimmer': 'linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.25) 50%, transparent 100%)',
+        'passport-gradient': 'linear-gradient(135deg, #0F1420 0%, #161D2E 50%, #0A0D14 100%)',
+        'gold-shimmer': 'linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.2) 50%, transparent 100%)',
+        'glass-gradient': 'linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)',
       }
     },
   },

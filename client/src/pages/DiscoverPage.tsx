@@ -90,12 +90,12 @@ export const DiscoverPage: React.FC = () => {
     return (
       <div
         key={peer.user._id}
-        className={`rounded-2xl p-5 flex flex-col justify-between transition-all bg-white dark:bg-obsidian-900 shadow-sm relative ${
+        className={`satin-card rounded-2xl p-5 flex flex-col justify-between transition-all relative ${
           isMutual
-            ? 'border-2 border-gold-500/40 hover:border-gold-500/80 shadow-gold-subtle'
+            ? 'border border-gold-500/50 shadow-gold-satin'
             : isSuggestedHighlight
-            ? 'border border-gold-500/30 hover:border-gold-500/60 bg-gradient-to-b from-gold-500/[0.03] to-transparent'
-            : 'border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20'
+            ? 'border border-gold-500/30 bg-gradient-to-b from-gold-500/[0.04] to-transparent'
+            : 'border border-slate-200/80 dark:border-white/[0.08] hover:border-gold-500/40'
         }`}
       >
         <div>
@@ -108,7 +108,7 @@ export const DiscoverPage: React.FC = () => {
               <div className="min-w-0">
                 <Link
                   to={`/profile/${peer.user.username}`}
-                  className="text-sm font-bold text-slate-900 dark:text-white hover:text-gold-500 transition-colors truncate block"
+                  className="text-sm font-semibold text-slate-900 dark:text-white hover:text-gold-500 transition-colors truncate block"
                 >
                   {peer.user.displayName}
                 </Link>
@@ -129,15 +129,15 @@ export const DiscoverPage: React.FC = () => {
 
             <div className="shrink-0 flex flex-col items-end gap-1">
               {isMutual ? (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gold-500/20 text-gold-600 dark:text-gold-400 border border-gold-500/40">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gold-500/20 text-gold-600 dark:text-gold-400 border border-gold-500/40">
                   🤝 Mutual Match
                 </span>
               ) : peer.matchInfo?.compatibilityScore > 0 ? (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   {peer.matchInfo.compatibilityScore}% Match
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400">
                   Explore
                 </span>
               )}
@@ -146,7 +146,7 @@ export const DiscoverPage: React.FC = () => {
 
           {/* Suggestion Reason Badge */}
           {peer.suggestionReason && (
-            <div className="mt-2.5 px-2.5 py-1 rounded-lg bg-gold-500/10 border border-gold-500/20 text-[11px] font-medium text-gold-700 dark:text-gold-300 flex items-center gap-1.5">
+            <div className="mt-2.5 px-2.5 py-1 rounded-xl bg-gold-500/10 border border-gold-500/20 text-[11px] font-medium text-gold-700 dark:text-gold-300 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-gold-500 shrink-0" />
               <span className="truncate">{peer.suggestionReason}</span>
             </div>
@@ -159,14 +159,14 @@ export const DiscoverPage: React.FC = () => {
 
           {/* Skills Teaching */}
           <div className="mt-4 space-y-1.5">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-gold-600 dark:text-gold-400 block">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-gold-600 dark:text-gold-400 block font-mono">
               Teaches ({peer.profile?.skillsTeaching?.length || 0})
             </span>
             <div className="flex flex-wrap gap-1.5">
               {peer.profile?.skillsTeaching?.slice(0, 4).map((s, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-black/50 border border-slate-200 dark:border-white/10 text-[11px] font-medium text-slate-800 dark:text-slate-200"
+                  className="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200/70 dark:border-white/[0.06] text-[11px] font-medium text-slate-800 dark:text-slate-200"
                 >
                   {s.name} <span className="text-slate-400 dark:text-slate-500 text-[9px]">({s.level})</span>
                 </span>
@@ -181,14 +181,14 @@ export const DiscoverPage: React.FC = () => {
 
           {/* Skills Learning */}
           <div className="mt-3 space-y-1.5">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400 block">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block font-mono">
               Wants To Learn ({peer.profile?.skillsLearning?.length || 0})
             </span>
             <div className="flex flex-wrap gap-1.5">
               {peer.profile?.skillsLearning?.slice(0, 4).map((s, i) => (
                 <span
                   key={i}
-                  className="px-2 py-0.5 rounded-md bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 text-[11px] text-slate-700 dark:text-slate-300"
+                  className="px-2.5 py-0.5 rounded-lg bg-slate-50/80 dark:bg-white/[0.02] border border-slate-200/60 dark:border-white/[0.04] text-[11px] text-slate-700 dark:text-slate-300"
                 >
                   {s.name}
                 </span>
@@ -203,8 +203,8 @@ export const DiscoverPage: React.FC = () => {
 
           {/* Why You Match Transparent Explanation */}
           {user && peer.matchInfo?.whyMatch?.length > 0 && (
-            <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-gold-500/20 space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gold-600 dark:text-gold-400 block mb-1">
+            <div className="mt-4 p-3 rounded-xl bg-slate-50/70 dark:bg-white/[0.03] border border-slate-200/70 dark:border-white/[0.06] space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gold-600 dark:text-gold-400 block mb-1 font-mono">
                 Compatibility Breakdown:
               </span>
               {peer.matchInfo.whyMatch.slice(0, 2).map((reason, i) => (
@@ -218,10 +218,10 @@ export const DiscoverPage: React.FC = () => {
         </div>
 
         {/* Bottom User-to-User Connection Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-4 border-t border-slate-200 dark:border-white/10 mt-5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-4 border-t border-slate-100 dark:border-white/[0.06] mt-5">
           <Link
             to={`/profile/${peer.user.username}`}
-            className="text-xs text-slate-600 dark:text-slate-400 hover:text-gold-500 transition-colors flex items-center justify-center sm:justify-start gap-1 py-1"
+            className="text-xs text-slate-600 dark:text-slate-400 hover:text-gold-500 transition-colors flex items-center justify-center sm:justify-start gap-1 py-1 font-medium"
             title="View Skill Passport"
           >
             <Compass className="w-3.5 h-3.5 text-slate-400" />
@@ -233,7 +233,7 @@ export const DiscoverPage: React.FC = () => {
               <>
                 <Link
                   to={`/messages?userId=${peer.user._id}`}
-                  className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:border-gold-500/40 bg-slate-50 dark:bg-white/5 hover:bg-gold-500/10 text-slate-700 dark:text-slate-200 hover:text-gold-600 dark:hover:text-gold-400 font-semibold text-xs transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 sm:flex-initial px-3 py-1.5 rounded-full border border-slate-200/80 dark:border-white/10 hover:border-gold-500/40 bg-slate-50 dark:bg-white/5 hover:bg-gold-500/10 text-slate-700 dark:text-slate-200 hover:text-gold-600 dark:hover:text-gold-400 font-semibold text-xs transition-all flex items-center justify-center gap-1.5"
                   title="Direct message this user"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-gold-500" />
@@ -242,7 +242,7 @@ export const DiscoverPage: React.FC = () => {
 
                 <button
                   onClick={() => setSelectedProposalPeer(peer)}
-                  className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs shadow-gold-subtle transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-full bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 text-obsidian-950 font-bold text-xs shadow-gold-satin transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
                   title="Propose 1-on-1 skill exchange"
                 >
                   <ArrowRightLeft className="w-3.5 h-3.5" />
@@ -252,7 +252,7 @@ export const DiscoverPage: React.FC = () => {
             ) : (
               <Link
                 to="/login"
-                className="px-3.5 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs shadow-gold-subtle transition-all flex items-center justify-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 text-obsidian-950 font-bold text-xs shadow-gold-satin transition-all flex items-center justify-center gap-1.5"
               >
                 Connect
               </Link>
@@ -273,7 +273,7 @@ export const DiscoverPage: React.FC = () => {
         <div className={`flex-1 ${user ? 'lg:pl-64' : ''} flex flex-col min-w-0 w-full`}>
           <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-white/[0.08]">
               <div>
                 <span className="text-xs font-mono font-bold text-gold-600 dark:text-gold-400 uppercase tracking-widest flex items-center gap-1.5">
                   <Compass className="w-4 h-4" />
@@ -290,14 +290,14 @@ export const DiscoverPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setMutualOnly(!mutualOnly)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                  className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5 ${
                     mutualOnly
-                      ? 'border-gold-500 bg-gold-500 text-obsidian-950 shadow-gold-subtle'
-                      : 'border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10'
+                      ? 'border-gold-500/50 bg-gold-500/15 text-gold-700 dark:text-gold-300 font-bold shadow-inner-glass'
+                      : 'border-slate-200/80 dark:border-white/10 bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-white/[0.08]'
                   }`}
                 >
                   <ArrowRightLeft className="w-3.5 h-3.5" />
-                  {mutualOnly ? 'Mutual Matches Only (Active)' : 'Filter Mutual Matches'}
+                  {mutualOnly ? 'Mutual Matches (Active)' : 'Filter Mutual Matches'}
                 </button>
               </div>
             </div>
@@ -312,7 +312,7 @@ export const DiscoverPage: React.FC = () => {
                     placeholder="Search by username (@username) or skills (e.g. Python, Cybersecurity, React)..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-gold-500 shadow-sm"
+                    className="w-full bg-white dark:bg-[#0B0E17] border border-slate-200/80 dark:border-white/10 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-gold-500/50 shadow-sm"
                   />
                   {searchQuery && (
                     <button
@@ -326,7 +326,7 @@ export const DiscoverPage: React.FC = () => {
                 </div>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs shadow-gold-subtle transition-all shrink-0"
+                  className="px-5 py-2.5 rounded-full bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 text-obsidian-950 font-bold text-xs shadow-gold-satin transition-all shrink-0 active:scale-[0.98]"
                 >
                   Search
                 </button>
@@ -341,7 +341,7 @@ export const DiscoverPage: React.FC = () => {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-300 focus:outline-none shadow-sm"
+                  className="bg-white dark:bg-[#0B0E17] border border-slate-200/80 dark:border-white/10 rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-300 focus:outline-none shadow-sm"
                 >
                   <option value="">All Categories</option>
                   <option value="Software Development">Software Development</option>
@@ -353,7 +353,7 @@ export const DiscoverPage: React.FC = () => {
                 <select
                   value={selectedLevel}
                   onChange={(e) => setSelectedLevel(e.target.value)}
-                  className="bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-300 focus:outline-none shadow-sm"
+                  className="bg-white dark:bg-[#0B0E17] border border-slate-200/80 dark:border-white/10 rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-300 focus:outline-none shadow-sm"
                 >
                   <option value="">All Levels</option>
                   <option value="Beginner">Beginner</option>
@@ -365,7 +365,7 @@ export const DiscoverPage: React.FC = () => {
                 <select
                   value={selectedLanguage}
                   onChange={(e) => setSelectedLanguage(e.target.value)}
-                  className="bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-300 focus:outline-none shadow-sm"
+                  className="bg-white dark:bg-[#0B0E17] border border-slate-200/80 dark:border-white/10 rounded-xl px-3 py-1.5 text-slate-700 dark:text-slate-300 focus:outline-none shadow-sm"
                 >
                   <option value="">All Languages</option>
                   <option value="English">English</option>
@@ -397,7 +397,7 @@ export const DiscoverPage: React.FC = () => {
               <div className="space-y-8">
                 {/* 1. Similar Suggestions Section only when browsing all (no query/filters) */}
                 {isBrowsingAll && similarSuggestions.length > 0 && (
-                  <section className="p-5 rounded-2xl bg-gradient-to-r from-gold-500/10 via-amber-500/5 to-transparent border border-gold-500/30 space-y-4">
+                  <section className="satin-card p-5 rounded-2xl border border-gold-500/30 space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-gold-600 dark:text-gold-400 font-bold">
@@ -426,7 +426,7 @@ export const DiscoverPage: React.FC = () => {
                 {/* 2. Main Search/Explore Results Grid or Fallback */}
                 {peers.length === 0 ? (
                   <div className="space-y-6">
-                    <div className="p-8 rounded-2xl bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 text-center space-y-3 shadow-sm">
+                    <div className="satin-card p-8 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] text-center space-y-3 shadow-sm">
                       <Compass className="w-10 h-10 mx-auto text-gold-500/70" />
                       <h3 className="text-base font-bold text-slate-900 dark:text-white">
                         {searchQuery ? `No exact match for "${searchQuery}"` : 'No peers found for selected filters'}
