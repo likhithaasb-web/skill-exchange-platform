@@ -87,29 +87,35 @@ exports.discoverPeers = async (req, res, next) => {
     const allCandidates = [...peers];
 
     // Apply search filter if provided (supports skill, username, and display name)
+    const isExplicitUsernameSearch = skill && skill.trim().startsWith('@');
+
     if (skill) {
       const queryLower = skill.toLowerCase().trim();
       const strippedQuery = queryLower.replace(/^@/, '');
+
       peers = peers.filter(item => {
-        const usernameLower = (item.user.username || '').toLowerCase();
+        const usernameClean = (item.user.username || '').toLowerCase().replace(/^@/, '');
         const displayNameLower = (item.user.displayName || '').toLowerCase();
 
+        if (isExplicitUsernameSearch) {
+          // If searching by @username, strictly match username handle or display name only
+          return usernameClean === strippedQuery || usernameClean.includes(strippedQuery) || displayNameLower.includes(strippedQuery);
+        }
+
         // Match username with or without @
-        const usernameMatch = usernameLower.includes(queryLower) ||
-                              usernameLower.replace(/^@/, '').includes(strippedQuery) ||
-                              (strippedQuery && usernameLower.includes(strippedQuery));
+        const usernameMatch = usernameClean.includes(strippedQuery);
 
         // Match display name
-        const displayNameMatch = displayNameLower.includes(queryLower) || displayNameLower.includes(strippedQuery);
+        const displayNameMatch = displayNameLower.includes(queryLower);
 
         // Match teaching skills
         const teachesMatch = item.profile.skillsTeaching.some(s =>
-          s.name.toLowerCase().includes(queryLower) || s.name.toLowerCase().includes(strippedQuery)
+          s.name.toLowerCase().includes(queryLower)
         );
 
         // Match learning skills
         const learnsMatch = item.profile.skillsLearning.some(s =>
-          s.name.toLowerCase().includes(queryLower) || s.name.toLowerCase().includes(strippedQuery)
+          s.name.toLowerCase().includes(queryLower)
         );
 
         return usernameMatch || displayNameMatch || teachesMatch || learnsMatch;
@@ -216,8 +222,11 @@ exports.discoverPeers = async (req, res, next) => {
       };
     });
 
-    scoredSuggestions.sort((a, b) => b.similarityScore - a.similarityScore);
-    const similarSuggestions = scoredSuggestions.slice(0, 6);
+    let similarSuggestions = [];
+    if (peers.length === 0 || (!skill && !category && !level && !language && !mutualOnly)) {
+      scoredSuggestions.sort((a, b) => b.similarityScore - a.similarityScore);
+      similarSuggestions = scoredSuggestions.slice(0, 6);
+    }
 
     return res.json({
       success: true,

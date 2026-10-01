@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Compass,
   Search,
@@ -7,7 +7,8 @@ import {
   Send,
   Sparkles,
   ArrowRightLeft,
-  MessageSquare
+  MessageSquare,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
@@ -19,11 +20,14 @@ import { MatchPeer } from '../types';
 
 export const DiscoverPage: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const initialSearch = searchParams.get('search') || searchParams.get('username') || searchParams.get('skill') || '';
 
   const [peers, setPeers] = useState<MatchPeer[]>([]);
   const [similarSuggestions, setSimilarSuggestions] = useState<MatchPeer[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('');
@@ -32,9 +36,13 @@ export const DiscoverPage: React.FC = () => {
 
   const [selectedProposalPeer, setSelectedProposalPeer] = useState<MatchPeer | null>(null);
 
+  // Debounced live filtering on search query and filters
   useEffect(() => {
-    fetchPeers();
-  }, [selectedCategory, selectedLevel, selectedLanguage, mutualOnly]);
+    const timer = setTimeout(() => {
+      fetchPeers();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedCategory, selectedLevel, selectedLanguage, mutualOnly]);
 
   const fetchPeers = async (overrideSkill?: string) => {
     setIsLoading(true);
@@ -77,6 +85,7 @@ export const DiscoverPage: React.FC = () => {
 
   const renderPeerCard = (peer: MatchPeer, isSuggestedHighlight = false) => {
     const isMutual = peer.matchInfo?.isMutualMatch;
+    const formattedUsername = `@${peer.user.username.replace(/^@/, '')}`;
 
     return (
       <div
@@ -92,15 +101,31 @@ export const DiscoverPage: React.FC = () => {
         <div>
           {/* Top Header */}
           <div className="flex items-start justify-between gap-3">
-            <Link to={`/profile/${peer.user.username}`} className="flex items-center gap-3 group min-w-0">
-              <UserAvatar avatar={peer.user.avatar} size="md" showGoldBorder={isMutual} />
+            <div className="flex items-center gap-3 min-w-0">
+              <Link to={`/profile/${peer.user.username}`} className="shrink-0">
+                <UserAvatar avatar={peer.user.avatar} size="md" showGoldBorder={isMutual} />
+              </Link>
               <div className="min-w-0">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-gold-500 transition-colors truncate">
+                <Link
+                  to={`/profile/${peer.user.username}`}
+                  className="text-sm font-bold text-slate-900 dark:text-white hover:text-gold-500 transition-colors truncate block"
+                >
                   {peer.user.displayName}
-                </h4>
-                <span className="text-xs text-slate-400 block truncate">@{peer.user.username}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSearchQuery(formattedUsername);
+                  }}
+                  className="text-xs text-slate-400 hover:text-gold-500 block truncate transition-colors font-mono text-left"
+                  title={`Filter by ${formattedUsername}`}
+                >
+                  {formattedUsername}
+                </button>
               </div>
-            </Link>
+            </div>
 
             <div className="shrink-0 flex flex-col items-end gap-1">
               {isMutual ? (
@@ -287,12 +312,21 @@ export const DiscoverPage: React.FC = () => {
                     placeholder="Search by username (@username) or skills (e.g. Python, Cybersecurity, React)..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-gold-500 shadow-sm"
+                    className="w-full bg-white dark:bg-obsidian-900 border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-gold-500 shadow-sm"
                   />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs shadow-gold-subtle transition-all"
+                  className="px-5 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs shadow-gold-subtle transition-all shrink-0"
                 >
                   Search
                 </button>
@@ -361,7 +395,7 @@ export const DiscoverPage: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-8">
-                {/* 1. Similar Suggestions Section when browsing all */}
+                {/* 1. Similar Suggestions Section only when browsing all (no query/filters) */}
                 {isBrowsingAll && similarSuggestions.length > 0 && (
                   <section className="p-5 rounded-2xl bg-gradient-to-r from-gold-500/10 via-amber-500/5 to-transparent border border-gold-500/30 space-y-4">
                     <div className="flex items-center justify-between">
@@ -431,26 +465,6 @@ export const DiscoverPage: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                       {peers.map((peer) => renderPeerCard(peer, false))}
-                    </div>
-                  </section>
-                )}
-
-                {/* 3. Extra Similar Suggestions when search results exist */}
-                {!isBrowsingAll && peers.length > 0 && similarSuggestions.length > 0 && (
-                  <section className="space-y-4 pt-6 border-t border-slate-200 dark:border-white/10">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-gold-500" />
-                        <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                          Similar Suggestions & Related Peers ({similarSuggestions.length})
-                        </h2>
-                      </div>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
-                        Related skills & compatible profiles
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                      {similarSuggestions.map((peer) => renderPeerCard(peer, true))}
                     </div>
                   </section>
                 )}
