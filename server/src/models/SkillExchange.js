@@ -21,9 +21,11 @@ const SkillExchangeSchema = new mongoose.Schema({
   },
   preferredFormat: {
     type: String,
-    enum: ['Voice', 'Whiteboard', 'Code', 'Camera', 'Mixed'],
     default: 'Mixed'
   },
+  preferredFormats: [{
+    type: String
+  }],
   message: {
     type: String,
     maxlength: 1000,

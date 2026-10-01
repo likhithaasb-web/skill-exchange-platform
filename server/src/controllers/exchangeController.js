@@ -108,7 +108,7 @@ exports.discoverPeers = async (req, res, next) => {
 
 exports.createExchangeRequest = async (req, res, next) => {
   try {
-    const { recipientId, requestedSkill, offeredSkill, preferredFormat, message } = req.body;
+    const { recipientId, requestedSkill, offeredSkill, preferredFormat, preferredFormats, message } = req.body;
     const requesterId = req.user._id;
 
     if (!recipientId || !requestedSkill || !offeredSkill) {
@@ -160,12 +160,18 @@ exports.createExchangeRequest = async (req, res, next) => {
       });
     }
 
+    const formatsArray = Array.isArray(preferredFormats) && preferredFormats.length > 0
+      ? preferredFormats
+      : (preferredFormat ? (Array.isArray(preferredFormat) ? preferredFormat : [preferredFormat]) : ['Mixed']);
+    const formatString = formatsArray.join(', ');
+
     const exchange = new SkillExchange({
       requesterId,
       recipientId,
       requestedSkill: typeof requestedSkill === 'string' ? { name: requestedSkill } : requestedSkill,
       offeredSkill: typeof offeredSkill === 'string' ? { name: offeredSkill } : offeredSkill,
-      preferredFormat: preferredFormat || 'Mixed',
+      preferredFormat: formatString,
+      preferredFormats: formatsArray,
       message: message || `Hi! I would love to exchange skills with you: teach ${offeredSkill.name || offeredSkill} and learn ${requestedSkill.name || requestedSkill}.`,
       status: 'pending'
     });

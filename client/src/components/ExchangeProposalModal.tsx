@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Send, ArrowRightLeft, ShieldAlert } from 'lucide-react';
+import { X, Send, ArrowRightLeft, ShieldAlert, Check } from 'lucide-react';
 import { MatchPeer, TeachingSkill, User } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
@@ -21,10 +21,21 @@ export const ExchangeProposalModal: React.FC<ExchangeProposalModalProps> = ({
 
   const [requestedSkill, setRequestedSkill] = useState<string>('');
   const [offeredSkill, setOfferedSkill] = useState<string>('');
-  const [preferredFormat, setPreferredFormat] = useState<'Voice' | 'Whiteboard' | 'Code' | 'Camera' | 'Mixed'>('Mixed');
+  const [preferredFormats, setPreferredFormats] = useState<string[]>(['Voice', 'Whiteboard']);
   const [message, setMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleToggleFormat = (fmt: string) => {
+    setPreferredFormats((prev) => {
+      if (prev.includes(fmt)) {
+        if (prev.length === 1) return prev; // Keep at least one selected
+        return prev.filter((f) => f !== fmt);
+      } else {
+        return [...prev, fmt];
+      }
+    });
+  };
 
   // Initialize skills when peer changes
   React.useEffect(() => {
@@ -51,6 +62,11 @@ export const ExchangeProposalModal: React.FC<ExchangeProposalModalProps> = ({
       return;
     }
 
+    if (preferredFormats.length === 0) {
+      setError('Please select at least one collaboration format.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -59,7 +75,8 @@ export const ExchangeProposalModal: React.FC<ExchangeProposalModalProps> = ({
         recipientId: peer.user._id,
         offeredSkill: { name: offeredSkill },
         requestedSkill: { name: requestedSkill },
-        preferredFormat,
+        preferredFormat: preferredFormats.join(', '),
+        preferredFormats,
         message,
       });
 
@@ -166,29 +183,38 @@ export const ExchangeProposalModal: React.FC<ExchangeProposalModalProps> = ({
             </div>
           </div>
 
-          {/* Format selection */}
+          {/* Format selection (Multi-optional) */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Preferred Collaboration Format
-            </label>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-              {(['Voice', 'Whiteboard', 'Code', 'Camera', 'Mixed'] as const).map((fmt) => (
-                <button
-                  type="button"
-                  key={fmt}
-                  onClick={() => setPreferredFormat(fmt)}
-                  className={`py-2 px-2 rounded-lg text-xs font-medium border text-center transition-all ${
-                    preferredFormat === fmt
-                      ? 'border-gold-500 bg-gold-500/15 text-gold-400 font-bold shadow-sm'
-                      : 'border-white/10 bg-white/[0.02] text-slate-400 hover:bg-white/5'
-                  }`}
-                >
-                  {fmt}
-                </button>
-              ))}
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-slate-300">
+                Preferred Collaboration Formats
+              </label>
+              <span className="text-[10px] text-gold-400 font-mono">
+                (Multi-select enabled)
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {(['Voice', 'Whiteboard', 'Code', 'Camera', 'Mixed'] as const).map((fmt) => {
+                const isSelected = preferredFormats.includes(fmt);
+                return (
+                  <button
+                    type="button"
+                    key={fmt}
+                    onClick={() => handleToggleFormat(fmt)}
+                    className={`py-2 px-2 rounded-lg text-xs font-medium border text-center transition-all flex items-center justify-center gap-1.5 ${
+                      isSelected
+                        ? 'border-gold-500 bg-gold-500/20 text-gold-300 font-bold shadow-sm ring-1 ring-gold-500/40'
+                        : 'border-white/10 bg-white/[0.02] text-slate-400 hover:bg-white/5 hover:border-white/20'
+                    }`}
+                  >
+                    {isSelected && <Check className="w-3.5 h-3.5 text-gold-400 stroke-[3]" />}
+                    <span>{fmt}</span>
+                  </button>
+                );
+              })}
             </div>
             <p className="text-[11px] text-slate-500 mt-1 italic">
-              * Camera is strictly optional in all Skill Studios.
+              * Multiple formats can be chosen. Camera is strictly optional in all Skill Studios.
             </p>
           </div>
 

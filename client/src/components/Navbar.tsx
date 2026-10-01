@@ -61,56 +61,33 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenSettings 
   };
 
   return (
-    <header className={`sticky top-0 z-40 w-full border-b border-slate-200 dark:border-obsidian-800 bg-white/90 dark:bg-obsidian-950/90 backdrop-blur-md transition-all duration-200 ${user ? 'lg:pl-64' : ''}`}>
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-obsidian-800 bg-white/90 dark:bg-obsidian-950/90 backdrop-blur-md transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3 sm:gap-4 w-full">
-        {/* Left: Mobile Toggle & Brand or Desktop Workspace Status */}
+        {/* Left: Mobile Toggle & Permanent Stable Brand Logo */}
         <div className="flex items-center gap-3">
-          {user ? (
-            <>
-              {/* Mobile-only toggle and brand */}
-              <div className="flex items-center gap-2.5 lg:hidden">
-                {onToggleSidebar && (
-                  <button
-                    onClick={onToggleSidebar}
-                    className="p-2 -ml-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
-                    aria-label="Toggle Navigation"
-                  >
-                    <Menu className="w-5 h-5" />
-                  </button>
-                )}
-                <Link to="/dashboard" className="flex items-center gap-2 group">
-                  <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-gold-600 via-gold-500 to-amber-300 flex items-center justify-center shadow-gold-subtle">
-                    <span className="font-display font-extrabold text-obsidian-950 text-sm tracking-tight">X</span>
-                  </div>
-                  <span className="text-lg font-extrabold font-display tracking-tight text-slate-900 dark:text-white">
-                    Skill<span className="text-gold-500">X</span>
-                  </span>
-                </Link>
-              </div>
-
-              {/* Desktop-only subtle breadcrumb/network status (Sidebar already has the primary logo) */}
-              <div className="hidden lg:flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  P2P Peer Network
-                </span>
-              </div>
-            </>
-          ) : (
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-gold-600 via-gold-500 to-amber-300 flex items-center justify-center shadow-gold-subtle group-hover:scale-105 transition-transform">
-                <span className="font-display font-extrabold text-obsidian-950 text-xl tracking-tight">X</span>
-              </div>
-              <div>
-                <span className="text-xl font-extrabold font-display tracking-tight text-slate-900 dark:text-white group-hover:text-gold-500 transition-colors">
-                  Skill<span className="text-gold-500">X</span>
-                </span>
-                <span className="hidden sm:block text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-medium">
-                  Exchange • Learn • Build
-                </span>
-              </div>
-            </Link>
+          {user && onToggleSidebar && (
+            <button
+              onClick={onToggleSidebar}
+              className="lg:hidden p-2 -ml-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+              aria-label="Toggle Navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           )}
+
+          <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2.5 group shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-gold-600 via-gold-500 to-amber-300 flex items-center justify-center shadow-gold-subtle group-hover:scale-105 transition-transform shrink-0">
+              <span className="font-display font-extrabold text-obsidian-950 text-xl tracking-tight">X</span>
+            </div>
+            <div>
+              <span className="text-xl font-extrabold font-display tracking-tight text-slate-900 dark:text-white group-hover:text-gold-500 transition-colors">
+                Skill<span className="text-gold-500">X</span>
+              </span>
+              <span className="hidden sm:block text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-medium">
+                Exchange • Learn • Build
+              </span>
+            </div>
+          </Link>
         </div>
 
         {/* Center Nav for Public Visitors */}
